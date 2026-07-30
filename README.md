@@ -25,4 +25,4 @@ Everything runs on your device; no server code, no accounts.
 
 ## Updating later
 - Re-upload a changed index.html and bump the version in sw.js
-  (change `reading-desk-v1` to `-v2`) so devices refresh the cached copy.
+  (bump the version in sw.js, e.g. -v3 to -v4) so devices refresh the cached copy.
