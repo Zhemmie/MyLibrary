@@ -255,7 +255,10 @@
   .fld input.dt{width:150px} .fld input.pg{width:64px} .fld input.num{width:64px}
   .fld.title{flex:1 1 200px} .fld.title input{width:100%}
   .fld.notes{flex:1 1 100%}
-  .fld.notes textarea{width:100%;min-height:120px;resize:vertical;line-height:1.5}
+  .fld.notes textarea{width:100%;min-height:48px;resize:none;overflow-y:hidden;line-height:1.5;box-sizing:border-box}
+  .notesmore{background:none;border:0;color:var(--brown);font-family:var(--mono);font-size:10px;letter-spacing:.1em;
+    text-transform:uppercase;cursor:pointer;padding:7px 2px 0;align-self:flex-start;text-decoration:underline}
+  .notesmore:hover{color:var(--gold-dim)}
   .dact{background:var(--brown);border:1px solid var(--brown);color:var(--gold-hi);font-family:var(--mono);font-size:10px;
     letter-spacing:.1em;text-transform:uppercase;padding:8px 12px;border-radius:3px;cursor:pointer}
   .dact.ghost{background:transparent;color:var(--ink-soft);border-color:var(--card-edge)}
@@ -532,7 +535,8 @@ function buildSpine(s,b,idx,cards,secEntry,standalone){
   const disc=document.createElement('button'); disc.className='rowbtn disc'; disc.innerHTML=openDetails.has(id)?'\u25BE':'\u25B8';
   disc.title='Details, notes & dates'; disc.setAttribute('aria-label','Toggle details: '+label);
   const toggle=(e)=>{ if(e) e.stopPropagation(); openDetails.has(id)?openDetails.delete(id):openDetails.add(id);
-    bk.classList.toggle('open'); disc.innerHTML=openDetails.has(id)?'\u25BE':'\u25B8'; };
+    bk.classList.toggle('open'); disc.innerHTML=openDetails.has(id)?'\u25BE':'\u25B8';
+    if(openDetails.has(id)){ const ta=bk.querySelector('.fld.notes textarea'); if(ta&&ta._autosize) requestAnimationFrame(ta._autosize); } };
   disc.onclick=toggle;
   const del=document.createElement('button'); del.className='rowbtn del'; del.innerHTML='\u2715'; del.title='Remove book';
   del.setAttribute('aria-label','Remove '+label); del.onclick=(e)=>{ e.stopPropagation(); removeBook(s.series,b); };
@@ -645,6 +649,7 @@ function buildList(){
     listEl.appendChild(e);
   }
   populateSelects(); updateTabCounts();
+  document.querySelectorAll('.bk.open .fld.notes textarea').forEach(ta=>{ if(ta._autosize) requestAnimationFrame(ta._autosize); });
 }
 
 function buildDetail(s,b,id,standalone){
@@ -682,10 +687,18 @@ function buildDetail(s,b,id,standalone){
     mv.append(up,dn); grid.appendChild(mv); }
   wrap.appendChild(grid);
 
-  /* 3) notes fills the rest */
+  /* 3) notes: auto-grows to fit, caps tall notes with a show more/less toggle */
   const nt=document.createElement('textarea'); nt.value=d.notes||''; nt.placeholder='Thoughts, quotes, where you left off\u2026';
-  nt.oninput=()=>{ det(id).notes=nt.value||undefined; sDet(); };
   const notesFld=mk('Notes',nt,'notes'); notesFld.style.marginTop='14px';
+  const more=document.createElement('button'); more.type='button'; more.className='notesmore'; more.style.display='none';
+  notesFld.appendChild(more);
+  const CAP=240; let expanded=false;
+  function autosize(){ nt.style.height='auto'; const full=nt.scrollHeight; if(!full){ return; }
+    if(full>CAP){ nt.style.height=(expanded?full:CAP)+'px'; more.textContent=expanded?'Show less':'Show more'; more.style.display=''; }
+    else { nt.style.height=full+'px'; more.style.display='none'; expanded=false; } }
+  nt._autosize=autosize;
+  nt.oninput=()=>{ det(id).notes=nt.value||undefined; sDet(); autosize(); };
+  more.onclick=()=>{ expanded=!expanded; autosize(); };
   wrap.appendChild(notesFld);
   return wrap;
 }
