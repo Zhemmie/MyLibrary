@@ -127,6 +127,8 @@
     font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:8px 11px;border-radius:3px;cursor:pointer}
   .tools button:hover,.subbar button:hover{color:var(--gold-hi);border-color:var(--gold-dim)}
   #btnAdd[aria-pressed=true]{background:var(--gold-dim);color:#20160c;border-color:var(--gold-dim)}
+  #btnSync[aria-pressed=true]{background:var(--gold-dim);color:#20160c;border-color:var(--gold-dim)}
+  #btnSync.on{border-color:var(--gold-dim);color:var(--gold-hi)}
   .subbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;padding-bottom:14px}
   .subbar .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-dark-soft)}
   .subbar select{cursor:pointer;color:var(--on-dark-soft)}
@@ -303,6 +305,7 @@
       </div>
       <div class="tools">
         <button id="btnAdd" aria-pressed="false">+ Add</button>
+        <button id="btnSync" aria-pressed="false">Sync</button>
         <button id="btnCopy">Copy for Sheets</button>
         <button id="btnSave">Save backup</button>
         <button id="btnLoad">Load backup</button>
@@ -323,6 +326,8 @@
       <button id="btnTxt">Export .txt</button>
     </div>
   </div>
+
+  <div class="addpanel" id="syncpanel"></div>
 
   <div class="addpanel" id="addpanel">
     <div class="addgroup">
@@ -370,6 +375,7 @@
 <script>
 const SEED = {"series":[]};
 const K_CAT='rl.catalog.v2', K_ST='readinglist.v1', K_RT='readinglist.ratings.v1', K_DET='rl.details.v1';
+const K_UPD='rl.updatedAt', SK_TOKEN='rl.sync.token', SK_GIST='rl.sync.gist', SK_LAST='rl.sync.lastAt';
 const ORDER=['unread','reading','read'];
 
 let mem=false, status={}, ratings={}, details={}, catalog;
@@ -378,10 +384,14 @@ try{ ratings=JSON.parse(localStorage.getItem(K_RT)||'{}'); }catch(e){ ratings={}
 try{ details=JSON.parse(localStorage.getItem(K_DET)||'{}'); }catch(e){ details={}; }
 try{ const s=localStorage.getItem(K_CAT); catalog=s?JSON.parse(s):structuredClone(SEED); }catch(e){ catalog=structuredClone(SEED); }
 
-function sCat(){ if(!mem){try{localStorage.setItem(K_CAT,JSON.stringify(catalog));}catch(e){mem=true;}} }
-function sSt(){ if(!mem){try{localStorage.setItem(K_ST,JSON.stringify(status));}catch(e){mem=true;}} }
-function sRt(){ if(!mem){try{localStorage.setItem(K_RT,JSON.stringify(ratings));}catch(e){mem=true;}} }
-function sDet(){ if(!mem){try{localStorage.setItem(K_DET,JSON.stringify(details));}catch(e){mem=true;}} }
+let dataUpdatedAt=+localStorage.getItem(K_UPD)||0;
+let applyingRemote=false;
+function onDataSaved(){ if(applyingRemote) return; dataUpdatedAt=Date.now();
+  try{localStorage.setItem(K_UPD,String(dataUpdatedAt));}catch(e){} schedulePush(); }
+function sCat(){ if(!mem){try{localStorage.setItem(K_CAT,JSON.stringify(catalog));}catch(e){mem=true;}} onDataSaved(); }
+function sSt(){ if(!mem){try{localStorage.setItem(K_ST,JSON.stringify(status));}catch(e){mem=true;}} onDataSaved(); }
+function sRt(){ if(!mem){try{localStorage.setItem(K_RT,JSON.stringify(ratings));}catch(e){mem=true;}} onDataSaved(); }
+function sDet(){ if(!mem){try{localStorage.setItem(K_DET,JSON.stringify(details));}catch(e){mem=true;}} onDataSaved(); }
 
 function idOf(sn,b){ return sn+'|'+b.num+'|'+b.title; }
 function statusOf(id){ return status[id]||'unread'; }
@@ -855,7 +865,8 @@ document.getElementById('btnCollapse').onclick=()=>{ const anyOpen=catalog.serie
   buildList(); render(); };
 
 const panel=document.getElementById('addpanel'), btnAdd=document.getElementById('btnAdd');
-btnAdd.onclick=()=>{ const open=panel.classList.toggle('open'); btnAdd.setAttribute('aria-pressed',open); if(open) document.getElementById('nsName').focus(); };
+btnAdd.onclick=()=>{ const open=panel.classList.toggle('open'); btnAdd.setAttribute('aria-pressed',open);
+  if(open){ const sp=document.getElementById('syncpanel'); sp.classList.remove('open'); const bs=document.getElementById('btnSync'); if(bs) bs.setAttribute('aria-pressed','false'); document.getElementById('nsName').focus(); } };
 document.getElementById('nsGo').onclick=()=>{ addSeries(nsName.value,nsAuthor.value); nsName.value=''; nsAuthor.value=''; };
 document.getElementById('nbGo').onclick=()=>{ addBook(nbSeries.value,nbNum.value,nbTitle.value); nbNum.value=''; nbTitle.value=''; };
 document.getElementById('npGo').onclick=()=>{ addList(npSeries.value,npText.value); npText.value=''; };
@@ -894,9 +905,120 @@ document.getElementById('file').onchange=e=>{ const f=e.target.files[0]; if(!f) 
     catch(err){ toast('That file is not a valid backup.'); } };
   fr.readAsText(f); e.target.value=''; };
 
+/* ================= GitHub Gist sync ================= */
+let syncToken=localStorage.getItem(SK_TOKEN)||'';
+let gistId=localStorage.getItem(SK_GIST)||'';
+let lastSyncAt=+localStorage.getItem(SK_LAST)||0;
+let pushTimer=null, syncing=false;
+const GIST_FILE='reading-desk.json';
+
+function hasAnyBooks(){ return catalog.series.some(s=>s.books.length>0); }
+// mark pre-existing local data as "fresh" so it isn't overwritten by an older/empty cloud copy
+if(!dataUpdatedAt && hasAnyBooks()){ dataUpdatedAt=Date.now(); try{localStorage.setItem(K_UPD,String(dataUpdatedAt));}catch(e){} }
+
+function syncPayload(){ return {version:4, updatedAt:dataUpdatedAt, catalog, status, ratings, details}; }
+function applyPayload(p){ applyingRemote=true;
+  catalog=p.catalog||{series:[]}; status=p.status||{}; ratings=p.ratings||{}; details=p.details||{};
+  dataUpdatedAt=+p.updatedAt||Date.now(); try{localStorage.setItem(K_UPD,String(dataUpdatedAt));}catch(e){}
+  sCat(); sSt(); sRt(); sDet(); applyingRemote=false;
+  collapsed.clear(); catalog.series.forEach(s=>{ if(s.series!=='Standalone') collapsed.add(s.series); });
+  buildList(); render(); }
+
+function ghFetch(url,opts){ opts=opts||{}; return fetch(url,Object.assign({},opts,{headers:Object.assign(
+  {'Authorization':'Bearer '+syncToken,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}, opts.headers||{})})); }
+async function findGist(){ const r=await ghFetch('https://api.github.com/gists?per_page=100'); if(!r.ok) return null;
+  const arr=await r.json(); const g=Array.isArray(arr)?arr.find(x=>x.files&&x.files[GIST_FILE]):null; return g?g.id:null; }
+async function createGist(){ const body={description:'The Reading Desk data \u2014 synced automatically, do not edit by hand',public:false,files:{}};
+  body.files[GIST_FILE]={content:JSON.stringify(syncPayload())};
+  const r=await ghFetch('https://api.github.com/gists',{method:'POST',body:JSON.stringify(body)});
+  if(!r.ok) throw new Error('create '+r.status); const j=await r.json();
+  gistId=j.id; localStorage.setItem(SK_GIST,gistId); return j; }
+async function pushNow(){ if(!syncToken) return; if(!gistId){ await createGist(); markSynced(); return; }
+  const files={}; files[GIST_FILE]={content:JSON.stringify(syncPayload())};
+  const r=await ghFetch('https://api.github.com/gists/'+gistId,{method:'PATCH',body:JSON.stringify({files})});
+  if(r.status===404){ gistId=''; localStorage.removeItem(SK_GIST); await createGist(); markSynced(); return; }
+  if(!r.ok) throw new Error('push '+r.status); markSynced(); }
+async function pullRemote(){ const r=await ghFetch('https://api.github.com/gists/'+gistId);
+  if(r.status===404) return null; if(!r.ok) throw new Error('pull '+r.status);
+  const j=await r.json(); const f=j.files&&j.files[GIST_FILE]; if(!f) return null;
+  let content=f.content; if(f.truncated&&f.raw_url){ const rr=await fetch(f.raw_url); content=await rr.text(); }
+  try{ return JSON.parse(content); }catch(e){ return null; } }
+function markSynced(){ lastSyncAt=Date.now(); try{localStorage.setItem(SK_LAST,String(lastSyncAt));}catch(e){} }
+
+function schedulePush(){ if(!syncToken) return; clearTimeout(pushTimer); pushTimer=setTimeout(()=>{ pushNow().then(refreshSyncPanel).catch(e=>{ setSyncMsg('Sync error: '+e.message); refreshSyncPanel(); }); }, 2500); }
+
+async function syncNow(manual){
+  if(!syncToken){ setSyncMsg('Add a token to connect.'); refreshSyncPanel(); return; }
+  if(syncing) return; syncing=true; setSyncMsg('Syncing\u2026'); refreshSyncPanel();
+  try{
+    if(!gistId){ const found=await findGist(); if(found){ gistId=found; localStorage.setItem(SK_GIST,gistId); } }
+    if(!gistId){ await createGist(); markSynced(); setSyncMsg('Connected \u00b7 cloud copy created'); }
+    else {
+      const remote=await pullRemote();
+      if(!remote){ await pushNow(); setSyncMsg('Connected \u00b7 pushed your library up'); }
+      else{ const rt=+remote.updatedAt||0;
+        if(rt>dataUpdatedAt){ applyPayload(remote); markSynced(); setSyncMsg('Updated from the cloud'); }
+        else if(dataUpdatedAt>rt){ await pushNow(); setSyncMsg('Your changes are saved to the cloud'); }
+        else{ markSynced(); setSyncMsg('Already up to date'); } }
+    }
+  }catch(e){ setSyncMsg('Sync error: '+(e.message||e)); if(manual) toast('Sync failed: '+(e.message||e)); }
+  syncing=false; refreshSyncPanel(); updateSyncBtn();
+}
+function connectToken(tok){ tok=(tok||'').trim(); if(!tok){ setSyncMsg('Paste a token first.'); return; }
+  syncToken=tok; localStorage.setItem(SK_TOKEN,syncToken); gistId=localStorage.getItem(SK_GIST)||''; syncNow(true); }
+function disconnectSync(){ syncToken=''; localStorage.removeItem(SK_TOKEN); localStorage.removeItem(SK_GIST); gistId='';
+  setSyncMsg(''); updateSyncBtn(); refreshSyncPanel(); toast('Sync disconnected on this device. Your books stay here.'); }
+
+let syncMsg='';
+function setSyncMsg(m){ syncMsg=m; }
+function relTime(ms){ if(!ms) return 'never'; const s=Math.round((Date.now()-ms)/1000);
+  if(s<45) return 'just now'; const m=Math.round(s/60); if(m<60) return m+'m ago';
+  const h=Math.round(m/60); if(h<24) return h+'h ago'; return Math.round(h/24)+'d ago'; }
+function updateSyncBtn(){ const b=document.getElementById('btnSync'); if(!b) return;
+  b.classList.toggle('on', !!syncToken); b.textContent = syncToken ? (syncing?'Sync \u2026':'Sync \u2713') : 'Sync'; }
+
+const syncPanel=document.getElementById('syncpanel');
+function refreshSyncPanel(){ if(!syncPanel.classList.contains('open')) return; buildSyncPanel(); }
+function buildSyncPanel(){
+  syncPanel.innerHTML='';
+  const g=document.createElement('div'); g.className='addgroup wide'; g.style.borderTop='0'; g.style.paddingTop='0';
+  const h=document.createElement('h3'); h.textContent='Sync across devices'; g.appendChild(h);
+  if(!syncToken){
+    const hint=document.createElement('span'); hint.className='hint';
+    hint.innerHTML='Paste a GitHub token to keep this library the same on every device. It is stored only in this browser. '+
+      'Create a <b>classic</b> token with just the <b>gist</b> scope at github.com/settings/tokens.';
+    const row=document.createElement('div'); row.className='addrow';
+    const inp=document.createElement('input'); inp.type='password'; inp.id='syncTok'; inp.placeholder='GitHub token (gist scope)'; inp.setAttribute('aria-label','GitHub token');
+    inp.style.flex='1 1 220px';
+    const btn=document.createElement('button'); btn.className='go'; btn.textContent='Connect';
+    btn.onclick=()=>connectToken(inp.value);
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter') btn.click(); });
+    row.append(inp,btn); g.append(hint,row);
+  } else {
+    const status=document.createElement('div'); status.className='hint';
+    status.innerHTML='Connected. Last synced '+relTime(lastSyncAt)+'.'+(syncMsg?' \u2014 '+syncMsg:'');
+    const row=document.createElement('div'); row.className='addrow';
+    const b1=document.createElement('button'); b1.className='go'; b1.textContent=syncing?'Syncing\u2026':'Sync now'; b1.disabled=syncing; b1.onclick=()=>syncNow(true);
+    const b2=document.createElement('button'); b2.className='go'; b2.style.background='transparent'; b2.style.color='var(--gold-hi)'; b2.textContent='Disconnect'; b2.onclick=disconnectSync;
+    row.append(b1,b2); g.append(status,row);
+    if(gistId){ const link=document.createElement('a'); link.href='https://gist.github.com/'+gistId; link.target='_blank'; link.rel='noopener';
+      link.className='hint'; link.style.color='var(--gold-hi)'; link.style.textDecoration='underline'; link.textContent='View the cloud copy'; g.appendChild(link); }
+  }
+  syncPanel.appendChild(g);
+}
+const btnSync=document.getElementById('btnSync');
+btnSync.onclick=()=>{ const open=syncPanel.classList.toggle('open'); btnSync.setAttribute('aria-pressed',open);
+  if(open){ addpanel.classList.remove('open'); document.getElementById('btnAdd').setAttribute('aria-pressed','false'); buildSyncPanel(); } };
+updateSyncBtn();
+
+// push best-effort when leaving/backgrounding; pull when returning
+document.addEventListener('visibilitychange',()=>{ if(document.visibilityState==='hidden'){ if(syncToken&&gistId){ clearTimeout(pushTimer); pushNow().catch(()=>{}); } }
+  else if(document.visibilityState==='visible'){ if(syncToken) syncNow(false); } });
+
 catalog.series.forEach(s=>{ if(s.series!=='Standalone') collapsed.add(s.series); });
 buildList(); render();
 document.getElementById('btnCollapse').textContent = catalog.series.some(s=>s.series!=='Standalone') ? 'Expand all' : 'Collapse all';
+if(syncToken) syncNow(false);
 if(mem) toast('This browser blocks local saving. Use Save backup to keep changes.');
 </script>
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}</script>
