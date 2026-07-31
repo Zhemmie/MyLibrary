@@ -465,7 +465,7 @@ function renderHero(){
   book.innerHTML='<span class="ribbon"></span><div class="frame"><div class="bt"></div><div class="ba"></div></div><div class="bseries"></div>';
   book.querySelector('.bt').textContent=main.b.title;
   book.querySelector('.ba').textContent=sObj?sObj.author:'';
-  book.querySelector('.bseries').textContent=main.s+(num?' \u00b7 '+num:'');
+  book.querySelector('.bseries').textContent=main.s+(num?' \u00b7 Book '+num:'');
 
   const meta=document.createElement('div'); meta.className='fmeta';
   const k=document.createElement('div'); k.className='k'; k.textContent=main.s+(num?' \u00b7 Book '+num:'');
