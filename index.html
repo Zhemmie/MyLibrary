@@ -110,8 +110,33 @@
   .empty-hero button{margin-top:14px}
 
   /* ---------- controls ---------- */
-  .controls{position:relative;z-index:12;background:var(--bg);padding-top:16px;margin-top:34px}
-  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-bottom:8px}
+  /* wood cabinet wrapping the whole library */
+  .cabinet{margin:22px 0 0;padding:16px;border-radius:12px;position:relative;
+    background:
+      repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0 2px, rgba(255,226,170,.018) 2px 6px),
+      repeating-linear-gradient(90deg, rgba(0,0,0,.035) 0 1px, transparent 1px 23px),
+      linear-gradient(180deg,#48351f,#31220f);
+    border:1px solid #1a1109;
+    box-shadow:0 26px 60px -28px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,220,160,.12), inset 0 -3px 10px rgba(0,0,0,.45)}
+  .cabinet .hero{margin:0}
+  .search{display:block;width:100%;margin:14px 0 0;flex:none}
+
+  /* controls drawer (collapsed by default) */
+  .ctrl{margin:12px 0 0;border-radius:8px;overflow:hidden;border:1px solid #150e07;
+    box-shadow:0 6px 14px -10px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,220,160,.08)}
+  .ctrl-head{display:flex;align-items:center;gap:12px;padding:11px 16px;cursor:pointer;user-select:none;
+    background:linear-gradient(180deg,#5c4527,#412f1a);border:0;width:100%;text-align:left}
+  .ctrl-head .pull{width:36px;height:9px;border-radius:6px;flex:none;
+    background:linear-gradient(180deg,#e6cf8f,#8a6a1a);box-shadow:0 1px 1px #0008, inset 0 1px 0 #fff7}
+  .ctrl-head .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-hi)}
+  .ctrl-head .caret{margin-left:auto;font-size:11px;color:var(--gold-hi);transition:transform .2s}
+  .ctrl.open .ctrl-head .caret{transform:rotate(90deg)}
+  .ctrl-body{display:none;flex-direction:column;gap:12px;padding:14px;
+    background:linear-gradient(180deg,rgba(56,39,22,.92),rgba(42,27,13,.92))}
+  .ctrl.open .ctrl-body{display:flex}
+  .ctrl-body .tools{margin-left:0}
+  .ctrl-body .subbar{padding-bottom:0}
+  .toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
   input[type=search],.addpanel input,.addpanel textarea,.addpanel select,.detail input,.detail textarea{
     background:var(--creme-hi);border:1px solid var(--card-edge);color:var(--ink);
     font-family:var(--mono);font-size:13px;padding:8px 10px;border-radius:3px}
@@ -185,15 +210,17 @@
   .drawer.collapsed .cards{display:none}
 
   /* ---------- tabs (walk to another shelf) ---------- */
-  .tabs{display:flex;gap:6px;justify-content:center;margin:2px 0 18px}
-  .tabs button{font-family:var(--type);font-size:14px;letter-spacing:.03em;color:#e6cf8f99;cursor:pointer;
-    background:linear-gradient(180deg,#2c2013,#20160d);border:1px solid #3a2b1a;
-    padding:9px 22px;border-radius:5px;transition:color .15s,background .15s}
+  .tabs{display:flex;gap:8px;margin:16px 0 0}
+  .tabs button{flex:1;font-family:var(--type);font-size:14px;letter-spacing:.03em;color:#e6cf8f99;cursor:pointer;
+    background:linear-gradient(180deg,#3a2a19,#28190c);border:1px solid #150e07;
+    padding:11px 16px;border-radius:6px 6px 0 0;transition:color .15s,background .15s;
+    box-shadow:inset 0 1px 0 rgba(255,220,160,.06)}
   .tabs button .n{font-family:var(--mono);font-size:11px;opacity:.8;margin-left:7px}
   .tabs button:hover{color:var(--gold-hi)}
   .tabs button[aria-selected=true]{color:#33280f;border-color:#8a6c1e;
     background:linear-gradient(180deg,#eadaa0 0%, #cda851 45%, #b9922c 70%, #d8bf78 100%);
     box-shadow:0 6px 14px -8px rgba(60,40,10,.6), inset 0 1px 0 #fff8}
+  .cabinet .archive{margin-top:0}
 
   /* ---------- book spines, stacked in the drawer ---------- */
   .bk{position:relative;transition:transform .16s cubic-bezier(.2,.8,.2,1)}
@@ -291,6 +318,10 @@
     .brass .sbtn{opacity:1}
     .grip,.brass .sgrip{display:none}
   }
+  @media (max-width:640px){
+    .cabinet{padding:9px;border-radius:9px}
+    .ctrl-body{padding:12px 10px}
+  }
 </style>
 </head>
 <body>
@@ -302,86 +333,96 @@
     <div class="gauge"><i id="gauge"></i></div>
   </header>
 
-  <div class="hero" id="hero"></div>
+  <div class="cabinet">
+    <div class="hero" id="hero"></div>
 
-  <div class="controls">
-    <div class="toolbar">
-      <input type="search" id="q" placeholder="Search title or author" aria-label="Search titles and authors">
-      <div class="chips" role="group" aria-label="Filter by status">
-        <button data-filter="all" aria-pressed="true">All</button>
-        <button data-filter="unread" aria-pressed="false">Unread</button>
-        <button data-filter="reading" aria-pressed="false">Reading</button>
-        <button data-filter="read" aria-pressed="false">Read</button>
-      </div>
-      <div class="tools">
-        <button id="btnAdd" aria-pressed="false">+ Add</button>
-        <button id="btnSync" aria-pressed="false">Sync</button>
-        <button id="btnCopy">Copy for Sheets</button>
-        <button id="btnSave">Save backup</button>
-        <button id="btnLoad">Load backup</button>
-      </div>
-    </div>
-    <div class="subbar">
-      <span class="lbl">Rating</span>
-      <select id="rfilter" aria-label="Filter by rating">
-        <option value="all">Any</option>
-        <option value="5">5 stars</option>
-        <option value="4">4 stars &amp; up</option>
-        <option value="3">3 stars &amp; up</option>
-        <option value="unrated">Unrated</option>
-      </select>
-      <button class="accent" id="btnSurprise">Surprise me</button>
-      <span class="spacer"></span>
-      <button id="btnCollapse">Collapse all</button>
-      <button id="btnTxt">Export .txt</button>
-    </div>
-  </div>
+    <input type="search" id="q" class="search" placeholder="Search title or author" aria-label="Search titles and authors">
 
-  <div class="addpanel" id="syncpanel"></div>
-
-  <div class="addpanel" id="addpanel">
-    <div class="addgroup">
-      <h3>New series</h3>
-      <div class="addrow">
-        <input id="nsName" placeholder="Series name" aria-label="New series name">
-        <input id="nsAuthor" placeholder="Author" aria-label="New series author">
-        <button class="go" id="nsGo">Add series</button>
-      </div>
-    </div>
-    <div class="addgroup">
-      <h3>New book</h3>
-      <div class="addrow">
-        <select id="nbSeries" aria-label="Series for new book"></select>
-        <input class="small" id="nbNum" placeholder="#" aria-label="Book number, optional">
-        <input id="nbTitle" placeholder="Title" aria-label="New book title">
-        <div class="fmttoggle" id="nbFmt" role="group" aria-label="Format">
-          <button type="button" data-fmt="book" aria-pressed="true">Book</button>
-          <button type="button" data-fmt="audio" aria-pressed="false">Audiobook</button>
+    <section class="ctrl" id="ctrl">
+      <button class="ctrl-head" id="ctrlHead" aria-expanded="false" aria-controls="ctrlBody">
+        <span class="pull"></span>
+        <span class="lbl">Controls</span>
+        <span class="caret">&#9656;</span>
+      </button>
+      <div class="ctrl-body" id="ctrlBody">
+        <div class="toolbar">
+          <div class="chips" role="group" aria-label="Filter by status">
+            <button data-filter="all" aria-pressed="true">All</button>
+            <button data-filter="unread" aria-pressed="false">Unread</button>
+            <button data-filter="reading" aria-pressed="false">Reading</button>
+            <button data-filter="read" aria-pressed="false">Read</button>
+          </div>
         </div>
-        <button class="go" id="nbGo">Add book</button>
-      </div>
-    </div>
-    <div class="addgroup wide">
-      <h3>Paste a list</h3>
-      <span class="hint">One book per line. Leading numbers like "3.5." are read as the book number.</span>
-      <div class="addrow">
-        <select id="npSeries" aria-label="Series to paste into"></select>
-        <textarea id="npText" placeholder="1. First Book&#10;2. Second Book&#10;2.5. A Novella&#10;3. Third Book" aria-label="Book list to paste"></textarea>
-        <button class="go" id="npGo">Add list</button>
-      </div>
-    </div>
-  </div>
+        <div class="subbar">
+          <span class="lbl">Rating</span>
+          <select id="rfilter" aria-label="Filter by rating">
+            <option value="all">Any</option>
+            <option value="5">5 stars</option>
+            <option value="4">4 stars &amp; up</option>
+            <option value="3">3 stars &amp; up</option>
+            <option value="unrated">Unrated</option>
+          </select>
+          <button class="accent" id="btnSurprise">Surprise me</button>
+          <span class="spacer"></span>
+          <button id="btnCollapse">Collapse all</button>
+          <button id="btnTxt">Export .txt</button>
+        </div>
+        <div class="tools">
+          <button id="btnAdd" aria-pressed="false">+ Add</button>
+          <button id="btnSync" aria-pressed="false">Sync</button>
+          <button id="btnCopy">Copy for Sheets</button>
+          <button id="btnSave">Save backup</button>
+          <button id="btnLoad">Load backup</button>
+        </div>
 
-  <div class="tabs" role="tablist" aria-label="Shelves">
-    <button id="tabSeries" role="tab" aria-selected="true">The Series <span class="n" id="nSeries"></span></button>
-    <button id="tabSingles" role="tab" aria-selected="false">Singles <span class="n" id="nSingles"></span></button>
-  </div>
-  <div class="archive" id="seriesPanel"><main id="list"></main></div>
-  <div class="archive" id="singlesPanel" hidden><main id="singles"></main></div>
+        <div class="addpanel" id="syncpanel"></div>
 
-  <footer>
-    Click a book&rsquo;s circle to cycle unread &rarr; reading &rarr; read &mdash; starting or finishing stamps the date for you. Rate with the stars, open &#9656; for notes &amp; dates, drag &#9783; or use &#8593;&#8595; to set reading order. Reorder whole series by dragging a brass sign&rsquo;s grip, or with the arrows in its rename panel. Everything saves in this browser and travels with your backup.
-  </footer>
+        <div class="addpanel" id="addpanel">
+          <div class="addgroup">
+            <h3>New series</h3>
+            <div class="addrow">
+              <input id="nsName" placeholder="Series name" aria-label="New series name">
+              <input id="nsAuthor" placeholder="Author" aria-label="New series author">
+              <button class="go" id="nsGo">Add series</button>
+            </div>
+          </div>
+          <div class="addgroup">
+            <h3>New book</h3>
+            <div class="addrow">
+              <select id="nbSeries" aria-label="Series for new book"></select>
+              <input class="small" id="nbNum" placeholder="#" aria-label="Book number, optional">
+              <input id="nbTitle" placeholder="Title" aria-label="New book title">
+              <div class="fmttoggle" id="nbFmt" role="group" aria-label="Format">
+                <button type="button" data-fmt="book" aria-pressed="true">Book</button>
+                <button type="button" data-fmt="audio" aria-pressed="false">Audiobook</button>
+              </div>
+              <button class="go" id="nbGo">Add book</button>
+            </div>
+          </div>
+          <div class="addgroup wide">
+            <h3>Paste a list</h3>
+            <span class="hint">One book per line. Leading numbers like "3.5." are read as the book number.</span>
+            <div class="addrow">
+              <select id="npSeries" aria-label="Series to paste into"></select>
+              <textarea id="npText" placeholder="1. First Book&#10;2. Second Book&#10;2.5. A Novella&#10;3. Third Book" aria-label="Book list to paste"></textarea>
+              <button class="go" id="npGo">Add list</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="tabs" role="tablist" aria-label="Shelves">
+      <button id="tabSeries" role="tab" aria-selected="true">The Series <span class="n" id="nSeries"></span></button>
+      <button id="tabSingles" role="tab" aria-selected="false">Singles <span class="n" id="nSingles"></span></button>
+    </div>
+    <div class="archive" id="seriesPanel"><main id="list"></main></div>
+    <div class="archive" id="singlesPanel" hidden><main id="singles"></main></div>
+
+    <footer>
+      Click a book&rsquo;s circle to cycle unread &rarr; reading &rarr; read &mdash; starting or finishing stamps the date for you. Rate with the stars, open &#9656; for notes &amp; dates, drag &#9783; or use &#8593;&#8595; to set reading order. Reorder whole series by dragging a brass sign&rsquo;s grip, or with the arrows in its rename panel. Everything saves in this browser and travels with your backup.
+    </footer>
+  </div>
 </div>
 
 <input type="file" id="file" accept="application/json" hidden>
@@ -906,6 +947,9 @@ btnAdd.onclick=()=>{ const open=panel.classList.toggle('open'); btnAdd.setAttrib
   if(open){ const sp=document.getElementById('syncpanel'); sp.classList.remove('open'); const bs=document.getElementById('btnSync'); if(bs) bs.setAttribute('aria-pressed','false'); document.getElementById('nsName').focus(); } };
 document.getElementById('nsGo').onclick=()=>{ addSeries(nsName.value,nsAuthor.value); nsName.value=''; nsAuthor.value=''; };
 let addFmt='book';
+const ctrl=document.getElementById('ctrl');
+document.getElementById('ctrlHead').onclick=()=>{ const open=ctrl.classList.toggle('open');
+  document.getElementById('ctrlHead').setAttribute('aria-expanded', String(open)); };
 document.querySelectorAll('#nbFmt button').forEach(b=>{ b.onclick=()=>{ addFmt=b.dataset.fmt;
   document.querySelectorAll('#nbFmt button').forEach(x=>x.setAttribute('aria-pressed', String(x.dataset.fmt===addFmt))); }; });
 document.getElementById('nbGo').onclick=()=>{ addBook(nbSeries.value,nbNum.value,nbTitle.value,addFmt); nbNum.value=''; nbTitle.value=''; };
