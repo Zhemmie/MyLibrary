@@ -350,7 +350,18 @@
   .sw.auto{background:linear-gradient(135deg,var(--sc,#43291d) 50%,#ffffff22 50%)}
   .sw.on{box-shadow:0 0 0 2px var(--gold-mid);border-color:transparent}
   .readhist{margin-top:12px;display:flex;flex-direction:column;gap:3px}
-  .readhist span{font-family:var(--mono);font-size:11px;color:var(--ink-soft);letter-spacing:.03em}
+  .readhist-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .readhist-head label{margin:0}
+  .histedit{background:none;border:0;cursor:pointer;color:var(--dim);font-size:13px;line-height:1;padding:2px 4px;border-radius:3px}
+  .histedit:hover{color:var(--brown)}
+  .histedit.on{color:var(--brown)}
+  .readhist-body{display:flex;flex-direction:column;gap:4px;margin-top:2px}
+  .readhist .hrow{font-family:var(--mono);font-size:11px;color:var(--ink-soft);letter-spacing:.03em}
+  .readhist .hrow.edit{display:flex;align-items:center;gap:8px}
+  .readhist .hrow.edit input[type=date]{font-family:var(--mono);font-size:11px;padding:3px 6px;border:1px solid var(--card-edge);border-radius:3px;background:var(--creme-hi);color:var(--ink)}
+  .readhist .hrow.edit select{font-family:var(--mono);font-size:11px;padding:3px 6px;border:1px solid var(--card-edge);border-radius:3px;background:var(--creme-hi);color:var(--ink)}
+  .hdel{background:none;border:0;cursor:pointer;color:var(--ox);font-size:12px;line-height:1;padding:2px 4px;border-radius:3px;margin-left:auto}
+  .hdel:hover{background:var(--ox);color:var(--creme-hi)}
   .bk.dnf .spine{opacity:.62}
   .bk.dnf .ttl{color:#e6cf8f99;text-decoration:line-through;text-decoration-color:#e6cf8f55}
   .bk.dnf .seal{background:#5c5148;box-shadow:none}
@@ -438,7 +449,7 @@
   </header>
 
   <div class="cabinet">
-    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v20</div>
+    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v21</div>
     <div class="hero" id="hero"></div>
 
     <input type="search" id="q" class="search" placeholder="Search title or author" aria-label="Search titles and authors">
@@ -1086,10 +1097,36 @@ function buildDetail(s,b,id,standalone){
   /* previous reads, if this one has been round more than once */
   if(d.reads && d.reads.length){
     const hist=document.createElement('div'); hist.className='readhist';
-    const lbl=document.createElement('label'); lbl.textContent='Previous reads'; hist.appendChild(lbl);
-    d.reads.forEach((rd,i)=>{ const row=document.createElement('span');
-      row.textContent=fmtDate(rd.finished)+(rd.rating?'  '+'\u2605'.repeat(rd.rating):'');
-      hist.appendChild(row); });
+    const head=document.createElement('div'); head.className='readhist-head';
+    const lbl=document.createElement('label'); lbl.textContent='Previous reads';
+    const edit=document.createElement('button'); edit.type='button'; edit.className='histedit'; edit.innerHTML='\u270E';
+    edit.title='Edit previous reads'; edit.setAttribute('aria-label','Edit previous reads');
+    head.append(lbl,edit); hist.appendChild(head);
+    const body=document.createElement('div'); body.className='readhist-body'; hist.appendChild(body);
+    let editing=false;
+    const draw=()=>{ body.innerHTML='';
+      (det(id).reads||[]).forEach((rd,i)=>{
+        if(!editing){ const row=document.createElement('span'); row.className='hrow';
+          row.textContent=(rd.finished?fmtDate(rd.finished):'(no date)')+(rd.rating?'  '+'\u2605'.repeat(rd.rating):'');
+          body.appendChild(row); return; }
+        const row=document.createElement('div'); row.className='hrow edit';
+        const dt=document.createElement('input'); dt.type='date'; dt.value=rd.finished||'';
+        dt.setAttribute('aria-label','Finished date for previous read '+(i+1));
+        dt.onchange=()=>{ setReadEntry(id,i,{finished:dt.value||undefined}); };
+        const rsel=document.createElement('select'); rsel.setAttribute('aria-label','Rating for previous read '+(i+1));
+        [['','\u2013 rating']].concat([1,2,3,4,5].map(n=>[String(n),'\u2605'.repeat(n)])).forEach(([v,t])=>{
+          const o=document.createElement('option'); o.value=v; o.textContent=t; if(String(rd.rating||'')===v) o.selected=true; rsel.appendChild(o); });
+        rsel.onchange=()=>{ setReadEntry(id,i,{rating:rsel.value?+rsel.value:undefined}); };
+        const del=document.createElement('button'); del.type='button'; del.className='hdel'; del.innerHTML='\u2715';
+        del.title='Delete this entry'; del.setAttribute('aria-label','Delete previous read '+(i+1));
+        del.onclick=()=>{ removeReadEntry(id,i); if(!(det(id).reads||[]).length) hist.remove(); else draw(); };
+        row.append(dt,rsel,del); body.appendChild(row);
+      });
+      if(editing && !(det(id).reads||[]).length){ const e=document.createElement('span'); e.className='hrow'; e.textContent='No previous reads.'; body.appendChild(e); }
+    };
+    edit.onclick=()=>{ editing=!editing; edit.classList.toggle('on',editing); edit.innerHTML=editing?'\u2713':'\u270E';
+      edit.title=editing?'Done editing':'Edit previous reads'; draw(); };
+    draw();
     wrap.appendChild(hist);
   }
 
@@ -1184,6 +1221,14 @@ function startReread(id){
   delete d.finished; d.started=today(); status[id]='reading';
   touch(id); sSt(); sDet(); buildList(); render(); toast('Reading again \u2014 previous finish kept in history.');
 }
+function setReadEntry(id,i,patch){ const d=det(id); if(!d.reads||!d.reads[i]) return;
+  Object.assign(d.reads[i],patch);
+  if(d.reads[i].finished===undefined) delete d.reads[i].finished;
+  if(d.reads[i].rating===undefined) delete d.reads[i].rating;
+  touch(id); sDet(); }
+function removeReadEntry(id,i){ const d=det(id); if(!d.reads||!d.reads[i]) return;
+  d.reads.splice(i,1); if(!d.reads.length) delete d.reads;
+  touch(id); sDet(); render(); toast('Removed a previous read.'); }
 function markRead(id){ status[id]='read'; if(!det(id).finished) det(id).finished=today(); sSt(); sDet(); render();
   toast('Marked finished \u2713'); }
 
