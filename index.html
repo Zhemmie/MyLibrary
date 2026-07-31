@@ -212,10 +212,12 @@
   .spine:hover{transform:translateX(3px)}
   .bk:hover{z-index:5}
   .srow{display:flex;align-items:center;gap:10px;min-width:0}
-  .srow.top{align-items:flex-start}
+  .srow.top{align-items:flex-start;padding-right:26px}
   .srow.bot{padding-left:53px}
   .spine.solo .srow.bot{padding-left:27px}
   .srow.bot .disc{margin-left:auto}
+  .audiobadge{flex:none;font-size:12px;line-height:1;margin-top:2px;filter:saturate(.85)}
+  .rowbtn.del{position:absolute;top:5px;right:6px;z-index:3}
   .grip{position:absolute;left:3px;top:0;bottom:0;width:16px;display:grid;place-items:center;cursor:grab;
     color:#e6cf8f80;opacity:0;transition:opacity .15s;font-size:12px;user-select:none}
   .spine:hover .grip{opacity:1}
@@ -259,6 +261,11 @@
   .notesmore{background:none;border:0;color:var(--brown);font-family:var(--mono);font-size:10px;letter-spacing:.1em;
     text-transform:uppercase;cursor:pointer;padding:7px 2px 0;align-self:flex-start;text-decoration:underline}
   .notesmore:hover{color:var(--gold-dim)}
+  .fmttoggle{display:inline-flex;border:1px solid var(--card-edge);border-radius:3px;overflow:hidden}
+  .fmttoggle button{background:var(--creme-hi);border:0;border-right:1px solid var(--card-edge);color:var(--ink-soft);
+    font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:8px 11px;cursor:pointer}
+  .fmttoggle button:last-child{border-right:0}
+  .fmttoggle button[aria-pressed=true]{background:var(--brown);color:var(--gold-hi)}
   .dact{background:var(--brown);border:1px solid var(--brown);color:var(--gold-hi);font-family:var(--mono);font-size:10px;
     letter-spacing:.1em;text-transform:uppercase;padding:8px 12px;border-radius:3px;cursor:pointer}
   .dact.ghost{background:transparent;color:var(--ink-soft);border-color:var(--card-edge)}
@@ -347,6 +354,10 @@
         <select id="nbSeries" aria-label="Series for new book"></select>
         <input class="small" id="nbNum" placeholder="#" aria-label="Book number, optional">
         <input id="nbTitle" placeholder="Title" aria-label="New book title">
+        <div class="fmttoggle" id="nbFmt" role="group" aria-label="Format">
+          <button type="button" data-fmt="book" aria-pressed="true">Book</button>
+          <button type="button" data-fmt="audio" aria-pressed="false">Audiobook</button>
+        </div>
         <button class="go" id="nbGo">Add book</button>
       </div>
     </div>
@@ -467,11 +478,12 @@ function renderHero(){
   if(ptot>0){ const bar=document.createElement('div'); bar.className='bar';
     const fill=document.createElement('i'); fill.style.width=Math.max(0,Math.min(100,pcur/ptot*100))+'%'; bar.appendChild(fill); prog.appendChild(bar); }
   const lbl=document.createElement('div'); lbl.className='lbl';
+  const unit=(d.fmt==='audio')?'chapter':'page';
   const left=document.createElement('span'); left.textContent=d.started?'Started '+fmtDate(d.started):'In progress';
   const right=document.createElement('span');
-  right.appendChild(document.createTextNode('page '));
+  right.appendChild(document.createTextNode(unit+' '));
   const cur=document.createElement('b'); cur.className='pgcur'; cur.tabIndex=0; cur.setAttribute('role','button');
-  cur.title='Click to set current page';
+  cur.title='Click to set current '+unit;
   cur.textContent=(d.pcur!=null&&d.pcur!=='')?d.pcur:'\u2014';
   const startEdit=()=>{ const inp=document.createElement('input'); inp.type='number'; inp.min='0'; inp.className='pgin';
     inp.value=d.pcur||''; inp.setAttribute('aria-label','Current page'); cur.replaceWith(inp); inp.focus(); inp.select();
@@ -524,6 +536,8 @@ function buildSpine(s,b,idx,cards,secEntry,standalone){
   seal.setAttribute('aria-label','Cycle status: '+label); seal.onclick=(e)=>{ e.stopPropagation(); cycle(id); };
   const num=document.createElement('span'); num.className='num'; num.textContent=b.num?b.num+'.':'';
   const ttl=document.createElement('span'); ttl.className='ttl'; ttl.textContent=b.title;
+  const isAudio=(details[id]&&details[id].fmt==='audio');
+  let badge=null; if(isAudio){ badge=document.createElement('span'); badge.className='audiobadge'; badge.textContent='\uD83C\uDFA7'; badge.title='Audiobook'; badge.setAttribute('aria-label','Audiobook'); }
 
   const stars=document.createElement('span'); stars.className='stars'; const starEls=[];
   for(let i=1;i<=5;i++){ const st=document.createElement('button'); st.className='star'; st.innerHTML='\u2605';
@@ -547,7 +561,8 @@ function buildSpine(s,b,idx,cards,secEntry,standalone){
   const bot=document.createElement('div'); bot.className='srow bot';
 
   if(standalone){ spine.classList.add('solo');
-    top.append(seal,ttl); bot.append(stars,meta,disc,del); spine.append(top,bot); }
+    if(badge) top.append(seal,badge,ttl); else top.append(seal,ttl);
+    bot.append(stars,meta,disc); spine.append(top,bot,del); }
   else {
     grip.addEventListener('mousedown',(e)=>{ e.stopPropagation(); bk.setAttribute('draggable','true'); });
     grip.addEventListener('click',(e)=>e.stopPropagation());
@@ -560,8 +575,9 @@ function buildSpine(s,b,idx,cards,secEntry,standalone){
     bk.addEventListener('drop',e=>{ if(!drag||drag.series!==s.series) return; e.preventDefault();
       const r=bk.getBoundingClientRect(); const before=(e.clientY-r.top)<r.height/2;
       bk.classList.remove('drop-before','drop-after'); dropReorder(s.series,drag.id,id,before); });
-    top.append(seal,num,ttl); bot.append(stars,meta,disc,del);
-    spine.append(grip,top,bot);
+    if(badge) top.append(seal,num,badge,ttl); else top.append(seal,num,ttl);
+    bot.append(stars,meta,disc);
+    spine.append(grip,top,bot,del);
   }
 
   bk.appendChild(spine);
@@ -680,7 +696,13 @@ function buildDetail(s,b,id,standalone){
   ptot.onchange=()=>{ det(id).ptot=ptot.value?+ptot.value:undefined; sDet(); renderHero(); };
   const pages=document.createElement('div'); pages.style.cssText='display:flex;gap:6px;align-items:center';
   pages.append(pcur,Object.assign(document.createElement('span'),{textContent:'of',style:'font-family:var(--mono);font-size:11px;color:var(--dim)'}),ptot);
-  grid.append(mk('Started',started),mk('Finished',finished),mk('Page / of',pages));
+  const isAudio=(d.fmt==='audio');
+  const fmtWrap=document.createElement('div'); fmtWrap.className='fmttoggle';
+  const fBook=document.createElement('button'); fBook.type='button'; fBook.textContent='Book'; fBook.setAttribute('aria-pressed', String(!isAudio));
+  const fAudio=document.createElement('button'); fAudio.type='button'; fAudio.textContent='Audiobook'; fAudio.setAttribute('aria-pressed', String(isAudio));
+  fBook.onclick=()=>setFormat(id,'book'); fAudio.onclick=()=>setFormat(id,'audio');
+  fmtWrap.append(fBook,fAudio);
+  grid.append(mk('Format',fmtWrap),mk('Started',started),mk('Finished',finished),mk((isAudio?'Chapter / of':'Page / of'),pages));
   if(!standalone){ const mv=document.createElement('div'); mv.className='dmove';
     const up=document.createElement('button'); up.innerHTML='\u2191'; up.title='Move up'; up.setAttribute('aria-label','Move up'); up.onclick=()=>moveBook(s.series,b,-1);
     const dn=document.createElement('button'); dn.innerHTML='\u2193'; dn.title='Move down'; dn.setAttribute('aria-label','Move down'); dn.onclick=()=>moveBook(s.series,b,1);
@@ -781,10 +803,12 @@ function addSeries(name,author){ name=name.trim(); author=author.trim();
   const entry={series:name,author,books:[]};
   if(idx>=0) catalog.series.splice(idx,0,entry); else catalog.series.push(entry);
   sCat(); buildList(); render(); toast('Added series \u201c'+name+'\u201d.'); }
-function addBook(sn,num,title){ title=title.trim(); num=num.trim();
+function setFormat(id,fmt){ const d=det(id); if(fmt==='audio') d.fmt='audio'; else delete d.fmt; sDet(); buildList(); render(); }
+function addBook(sn,num,title,fmt){ title=title.trim(); num=num.trim();
   if(!title){ toast('Give the book a title first.'); return; }
   const s=findSeries(sn); if(!s){ toast('Pick a series.'); return; }
   insertByNumber(s.books,{num,title});
+  if(fmt==='audio'){ det(idOf(sn,{num,title})).fmt='audio'; sDet(); }
   sCat(); buildList(); render(); toast('Added \u201c'+title+'\u201d.'); }
 function parseLine(raw){ let t=raw.trim(); if(!t) return null; t=t.replace(/^[-*\u2022]\s+/,'');
   const m=t.match(/^(\d+(?:\.\d+)?)[.)]?\s+(.+)$/); if(m) return {num:m[1],title:m[2].trim()}; return {num:'',title:t}; }
@@ -881,7 +905,10 @@ const panel=document.getElementById('addpanel'), btnAdd=document.getElementById(
 btnAdd.onclick=()=>{ const open=panel.classList.toggle('open'); btnAdd.setAttribute('aria-pressed',open);
   if(open){ const sp=document.getElementById('syncpanel'); sp.classList.remove('open'); const bs=document.getElementById('btnSync'); if(bs) bs.setAttribute('aria-pressed','false'); document.getElementById('nsName').focus(); } };
 document.getElementById('nsGo').onclick=()=>{ addSeries(nsName.value,nsAuthor.value); nsName.value=''; nsAuthor.value=''; };
-document.getElementById('nbGo').onclick=()=>{ addBook(nbSeries.value,nbNum.value,nbTitle.value); nbNum.value=''; nbTitle.value=''; };
+let addFmt='book';
+document.querySelectorAll('#nbFmt button').forEach(b=>{ b.onclick=()=>{ addFmt=b.dataset.fmt;
+  document.querySelectorAll('#nbFmt button').forEach(x=>x.setAttribute('aria-pressed', String(x.dataset.fmt===addFmt))); }; });
+document.getElementById('nbGo').onclick=()=>{ addBook(nbSeries.value,nbNum.value,nbTitle.value,addFmt); nbNum.value=''; nbTitle.value=''; };
 document.getElementById('npGo').onclick=()=>{ addList(npSeries.value,npText.value); npText.value=''; };
 ['nsName','nsAuthor'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('nsGo').click();}));
 ['nbNum','nbTitle'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('nbGo').click();}));
@@ -895,10 +922,11 @@ function toast(msg,actLabel,actFn){ const t=document.getElementById('toast'); t.
 function download(name,text,type){ const blob=new Blob([text],{type}); const a=document.createElement('a');
   a.href=URL.createObjectURL(blob); a.download=name; a.click(); URL.revokeObjectURL(a.href); }
 document.getElementById('btnCopy').onclick=()=>{
-  const rows=[['Series','Author','#','Title','Status','Rating','Started','Finished','Pages','Notes'].join('\t')];
+  const rows=[['Series','Author','#','Title','Format','Status','Rating','Started','Finished','Progress','Notes'].join('\t')];
   catalog.series.forEach(s=>s.books.forEach(b=>{ const id=idOf(s.series,b); const st=statusOf(id); const d=details[id]||{};
-    const pages=(d.pcur||d.ptot)?((d.pcur||'')+'/'+(d.ptot||'')):'';
-    rows.push([s.series,s.author,b.num,b.title,st[0].toUpperCase()+st.slice(1),ratings[id]||'',d.started||'',d.finished||'',pages,(d.notes||'').replace(/\s+/g,' ')].join('\t')); }));
+    const unit=(d.fmt==='audio')?'ch ':'p ';
+    const prog=(d.pcur||d.ptot)?(unit+(d.pcur||'')+'/'+(d.ptot||'')):'';
+    rows.push([s.series,s.author,b.num,b.title,(d.fmt==='audio'?'Audiobook':'Book'),st[0].toUpperCase()+st.slice(1),ratings[id]||'',d.started||'',d.finished||'',prog,(d.notes||'').replace(/\s+/g,' ')].join('\t')); }));
   const text=rows.join('\n'); const done=()=>toast('Copied. Paste into your sheet.');
   if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(text).then(done,()=>fbCopy(text,done)); else fbCopy(text,done); };
 function fbCopy(text,done){ const ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;opacity:0'; document.body.appendChild(ta); ta.select();
