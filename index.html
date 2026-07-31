@@ -278,22 +278,32 @@
   .spine.light:not(.foilttl) .ttl{text-shadow:0 1px 0 rgba(255,255,255,.3)}
   .spine.light .meta{color:#4a3a22cc}
   .spine.light .star{color:#0000001f}
+  .spine.light .star.on{color:#8a6a1a}
+  .stwrap{display:flex;flex-direction:column;gap:8px}
+  .statusseg{display:inline-flex;border:1px solid var(--card-edge);border-radius:4px;overflow:hidden;flex-wrap:wrap;width:fit-content}
+  .statusseg button{background:var(--creme-hi);border:0;border-right:1px solid var(--card-edge);color:var(--ink-soft);
+    font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;padding:8px 12px;cursor:pointer}
+  .statusseg button:last-child{border-right:0}
+  .statusseg button[aria-pressed=true]{background:var(--brown);color:var(--gold-hi)}
+  .drate{display:inline-flex;gap:4px}
+  .drstar{background:none;border:0;padding:2px 1px;cursor:pointer;font-size:24px;line-height:1;color:#cdbc95;transition:color .1s}
+  .drstar.on{color:var(--gold-mid)}
+  .drstar:hover{color:var(--gold-mid)}
   .grip{position:absolute;left:3px;top:0;bottom:0;width:16px;display:grid;place-items:center;cursor:grab;
     color:#e6cf8f80;opacity:0;transition:opacity .15s;font-size:12px;user-select:none}
   .spine:hover .grip{opacity:1}
   .grip:active{cursor:grabbing}
-  .seal{width:16px;height:16px;flex:none;border-radius:50%;box-shadow:inset 0 0 0 1.5px rgba(240,230,205,.5);cursor:pointer;
-    display:grid;place-items:center;font-family:var(--mono);font-size:10px;color:#241a10;transition:transform .15s;margin-top:1px}
-  .seal:hover{transform:scale(1.14)}
-  .bk.read .seal{background:radial-gradient(circle at 40% 33%,var(--gold-hi),var(--gold-dim));box-shadow:none}
-  .bk.read .seal::after{content:"\2713"}
-  .bk.reading .seal{background:var(--ox);box-shadow:none;color:#f0e6cd}
+  .seal{width:6px;height:22px;flex:none;border-radius:2px;box-shadow:inset 0 0 0 1px rgba(240,230,205,.5);
+    display:grid;place-items:center;font-family:var(--mono);font-size:9px;color:#241a10;margin-top:1px;overflow:hidden}
+  .bk.read .seal{background:linear-gradient(180deg,var(--gold-hi),var(--gold-dim));box-shadow:none}
+  .bk.read .seal::after{content:""}
+  .bk.reading .seal{background:var(--ox);box-shadow:none}
   .num{font-family:var(--mono);font-size:12px;color:#e6cf8f99;flex:none;text-align:right;margin-top:2px}
   .ttl{flex:1;font-family:var(--disp);font-weight:600;font-size:18px;color:#f0e6cd;min-width:0;letter-spacing:.01em;
     line-height:1.18;white-space:normal;overflow-wrap:anywhere}
   .bk.read .ttl{color:#e6cf8fcc}
   .stars{display:inline-flex;gap:2px;flex:none}
-  .star{background:none;border:0;padding:0 1px;cursor:pointer;font-size:14px;line-height:1;color:#ffffff26;transition:color .12s}
+  .star{padding:0 1px;font-size:14px;line-height:1;color:#ffffff26}
   .star.on{color:var(--gold-hi)}
   .meta{font-family:var(--type);font-size:11px;color:#e6cf8f88;letter-spacing:.02em;flex:none}
   .meta.now{color:#f0b48f;font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase;font-size:10px}
@@ -311,6 +321,7 @@
   .drow{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}
   .dgrid{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end;margin-top:14px}
   .fld{display:flex;flex-direction:column;gap:4px}
+  .fld.wide{flex:1 1 100%}
   .fld label{font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
   .fld input,.fld textarea{background:var(--creme-hi);border:1px solid var(--card-edge);color:var(--ink);
     font-family:var(--mono);font-size:13px;padding:6px 8px;border-radius:3px}
@@ -343,7 +354,7 @@
   .bk.dnf .spine{opacity:.62}
   .bk.dnf .ttl{color:#e6cf8f99;text-decoration:line-through;text-decoration-color:#e6cf8f55}
   .bk.dnf .seal{background:#5c5148;box-shadow:none}
-  .bk.dnf .seal::after{content:"\2013";color:#241a10}
+  .bk.dnf .seal::after{content:""}
   .dact{background:var(--brown);border:1px solid var(--brown);color:var(--gold-hi);font-family:var(--mono);font-size:10px;
     letter-spacing:.1em;text-transform:uppercase;padding:8px 12px;border-radius:3px;cursor:pointer}
   .dact.ghost{background:transparent;color:var(--ink-soft);border-color:var(--card-edge)}
@@ -427,7 +438,7 @@
   </header>
 
   <div class="cabinet">
-    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v19</div>
+    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v20</div>
     <div class="hero" id="hero"></div>
 
     <input type="search" id="q" class="search" placeholder="Search title or author" aria-label="Search titles and authors">
@@ -835,18 +846,16 @@ function buildSpine(s,b,idx,cards,secEntry,standalone){
   decorateSpine(spine, s, b, id, standalone);
 
   const grip=document.createElement('span'); grip.className='grip'; grip.innerHTML='\u2807'; grip.title='Drag to reorder';
-  const seal=document.createElement('button'); seal.className='seal'; seal.title='Cycle status';
-  seal.setAttribute('aria-label','Cycle status: '+label); seal.onclick=(e)=>{ e.stopPropagation(); cycle(id); };
+  const seal=document.createElement('span'); seal.className='seal'; seal.setAttribute('aria-hidden','true');
   const num=document.createElement('span'); num.className='num'; num.textContent=b.num?b.num+'.':'';
   const ttl=document.createElement('span'); ttl.className='ttl'; ttl.textContent=b.title;
   const isAudio=(details[id]&&details[id].fmt==='audio');
   let badge=null; if(isAudio){ badge=document.createElement('span'); badge.className='audiobadge'; badge.textContent='\uD83C\uDFA7'; badge.title='Audiobook'; badge.setAttribute('aria-label','Audiobook'); }
 
   const stars=document.createElement('span'); stars.className='stars'; const starEls=[];
-  for(let i=1;i<=5;i++){ const st=document.createElement('button'); st.className='star'; st.innerHTML='\u2605';
-    st.title=i+' star'+(i>1?'s':''); st.setAttribute('aria-label','Rate '+i+': '+label);
-    st.onmouseenter=()=>paintStars(starEls,i); st.onmouseleave=()=>paintStars(starEls,ratings[id]||0);
-    st.onclick=(e)=>{ e.stopPropagation(); setRating(id,i); }; stars.appendChild(st); starEls.push(st); }
+  stars.setAttribute('aria-hidden','true');
+  for(let i=1;i<=5;i++){ const st=document.createElement('span'); st.className='star'; st.innerHTML='\u2605';
+    stars.appendChild(st); starEls.push(st); }
 
   const meta=document.createElement('span'); meta.className='meta';
   const disc=document.createElement('button'); disc.className='rowbtn disc'; disc.innerHTML=openDetails.has(id)?'\u25BE':'\u25B8';
@@ -858,7 +867,7 @@ function buildSpine(s,b,idx,cards,secEntry,standalone){
   const del=document.createElement('button'); del.className='rowbtn del'; del.innerHTML='\u2715'; del.title='Remove book';
   del.setAttribute('aria-label','Remove '+label); del.onclick=(e)=>{ e.stopPropagation(); removeBook(s.series,b); };
 
-  spine.onclick=(e)=>{ if(e.target.closest('.seal,.star,.rowbtn,.grip')) return; toggle(); };
+  spine.onclick=(e)=>{ if(e.target.closest('.rowbtn,.grip')) return; toggle(); };
 
   const top=document.createElement('div'); top.className='srow top';
   const bot=document.createElement('div'); bot.className='srow bot';
@@ -1025,22 +1034,36 @@ function buildDetail(s,b,id,standalone){
   const fAudio=document.createElement('button'); fAudio.type='button'; fAudio.textContent='Audiobook'; fAudio.setAttribute('aria-pressed', String(isAudio));
   fBook.onclick=()=>setFormat(id,'book'); fAudio.onclick=()=>setFormat(id,'audio');
   fmtWrap.append(fBook,fAudio);
-  /* status actions: set aside, or start a re-read */
+  /* status: a clear segmented control, plus re-read / up-next actions */
   const st=statusOf(id);
-  const stWrap=document.createElement('div'); stWrap.className='stactions';
-  const aside=document.createElement('button'); aside.type='button'; aside.className='dact ghost';
-  aside.textContent = st==='dnf' ? 'Put back' : 'Set aside';
-  aside.title = st==='dnf' ? 'Return this to unread' : 'Stopped reading without finishing';
-  aside.onclick=()=>applyStatus(id, st==='dnf'?'unread':'dnf');
-  stWrap.appendChild(aside);
+  const stWrap=document.createElement('div'); stWrap.className='stwrap';
+  const seg=document.createElement('div'); seg.className='statusseg';
+  [['unread','Unread'],['reading','Reading'],['read','Read'],['dnf','Set aside']].forEach(([val,lab])=>{
+    const btn=document.createElement('button'); btn.type='button'; btn.textContent=lab;
+    btn.setAttribute('aria-pressed', String(st===val));
+    btn.onclick=()=>{ if(statusOf(id)!==val) applyStatus(id,val); };
+    seg.appendChild(btn); });
+  stWrap.appendChild(seg);
+  const stActs=document.createElement('div'); stActs.className='stactions';
   if(st==='read'){ const again=document.createElement('button'); again.type='button'; again.className='dact ghost';
     again.textContent='Read again'; again.title='Start a re-read, keeping this finish in history';
-    again.onclick=()=>startReread(id); stWrap.appendChild(again); }
+    again.onclick=()=>startReread(id); stActs.appendChild(again); }
   if(st!=='read'){ const nx=document.createElement('button'); nx.type='button'; nx.className='dact ghost';
     nx.textContent = d.next ? 'In Up next' : 'Up next';
     nx.title='Keep this on the short list under Currently reading';
     if(d.next) nx.setAttribute('aria-pressed','true');
-    nx.onclick=()=>toggleNext(id); stWrap.appendChild(nx); }
+    nx.onclick=()=>toggleNext(id); stActs.appendChild(nx); }
+  if(stActs.children.length) stWrap.appendChild(stActs);
+
+  /* editable rating, right here in the card */
+  const rateWrap=document.createElement('div'); rateWrap.className='drate'; const rEls=[];
+  const paintR=n=>rEls.forEach((el,i)=>el.classList.toggle('on',i<n));
+  for(let i=1;i<=5;i++){ const rs=document.createElement('button'); rs.type='button'; rs.className='drstar'; rs.innerHTML='\u2605';
+    rs.title=i+' star'+(i>1?'s':''); rs.setAttribute('aria-label','Rate '+i);
+    rs.onmouseenter=()=>paintR(i); rs.onmouseleave=()=>paintR(ratings[id]||0);
+    rs.onclick=()=>{ setRating(id, ratings[id]===i?0:i); paintR(ratings[id]||0); };
+    rateWrap.appendChild(rs); rEls.push(rs); }
+  paintR(ratings[id]||0);
   const sw=document.createElement('div'); sw.className='swatches';
   const auto=document.createElement('button'); auto.type='button'; auto.className='sw auto';
   auto.title='Automatic colour'; auto.setAttribute('aria-label','Automatic colour');
@@ -1052,7 +1075,7 @@ function buildDetail(s,b,id,standalone){
     btn.style.setProperty('--sc',c); btn.title=c; btn.setAttribute('aria-label','Spine colour '+c);
     if(d.color===c) btn.classList.add('on');
     btn.onclick=()=>setColor(id,c); sw.appendChild(btn); });
-  grid.append(mk('Format',fmtWrap),mk('Started',started),mk('Finished',finished),mk((isAudio?'Chapter / of':'Page / of'),pages),mk('Status',stWrap));
+  grid.append(mk('Format',fmtWrap),mk('Started',started),mk('Finished',finished),mk((isAudio?'Chapter / of':'Page / of'),pages),mk('Status',stWrap,'wide'),mk('Your rating',rateWrap));
   const swf=mk('Spine colour',sw,'wide'); wrap.appendChild(swf);
   if(!standalone){ const mv=document.createElement('div'); mv.className='dmove';
     const up=document.createElement('button'); up.innerHTML='\u2191'; up.title='Move up'; up.setAttribute('aria-label','Move up'); up.onclick=()=>moveBook(s.series,b,-1);
