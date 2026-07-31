@@ -463,9 +463,25 @@ function fmtDate(s){ if(!s) return ''; const p=s.split('-'); if(p.length!==3) re
   return MON[(+p[1]-1)]+" "+(+p[2])+" \u2019"+p[0].slice(2); }
 function parseNum(n){ const f=parseFloat(n); return isNaN(f)?Infinity:f; }
 
-/* deterministic brown cover tint per series */
-const COVERS=['#43291d','#4a2a20','#3f2a17','#472f1c','#3a2b2b','#402a24','#37301c','#4a3320','#3a2618'];
-function coverFor(name){ let h=0; for(let i=0;i<name.length;i++) h=(h*31+name.charCodeAt(i))>>>0; return COVERS[h%COVERS.length]; }
+/* deterministic spine colors: palette pick by name, small per-title shift within a series */
+const COVERS=['#43291d','#5a2b2b','#6b2f2b','#7a3320','#4f4118','#5a3a1c','#3b4a24','#2f4a3a',
+  '#244a44','#26414a','#2e3b57','#33305f','#402a44','#5a2f45','#3a2b2b','#4a3320'];
+function hashStr(s){ s=String(s||''); let h=2166136261>>>0;
+  for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619)>>>0; } return h>>>0; }
+function coverFor(name){ return COVERS[hashStr(name)%COVERS.length]; }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function hexToHsl(hex){ let r=parseInt(hex.slice(1,3),16)/255,g=parseInt(hex.slice(3,5),16)/255,b=parseInt(hex.slice(5,7),16)/255;
+  const mx=Math.max(r,g,b),mn=Math.min(r,g,b); let h,s,l=(mx+mn)/2;
+  if(mx===mn){ h=0;s=0; } else { const d=mx-mn; s=l>0.5?d/(2-mx-mn):d/(mx+mn);
+    h = mx===r ? (g-b)/d+(g<b?6:0) : mx===g ? (b-r)/d+2 : (r-g)/d+4; h*=60; }
+  return {h, s:s*100, l:l*100}; }
+function hslToHex(h,s,l){ s/=100; l/=100; const k=n=>(n+h/30)%12; const a=s*Math.min(l,1-l);
+  const f=n=>{ const c=l-a*Math.max(-1,Math.min(k(n)-3, Math.min(9-k(n),1))); return Math.round(255*c); };
+  const to=x=>x.toString(16).padStart(2,'0'); return '#'+to(f(0))+to(f(8))+to(f(4)); }
+function shadeFor(hex,seed){ const c=hexToHsl(hex); const h=hashStr(seed);
+  const dh=((h&31)-15)*0.7, ds=(((h>>>5)&15)-7)*0.9, dl=(((h>>>9)&15)-7)*0.9;
+  return hslToHex((c.h+dh+360)%360, clamp(c.s+ds,12,72), clamp(c.l+dl,14,42)); }
+function spineColor(seriesName,title,standalone){ return standalone ? coverFor(title) : shadeFor(coverFor(seriesName), title); }
 
 let filter='all', ratingFilter='all', query='', tab='series';
 const collapsed=new Set(), openDetails=new Set();
@@ -502,7 +518,7 @@ function renderHero(){
   const sObj=findSeries(main.s); const num=main.b.num;
   const art=document.createElement('section'); art.className='featured'; art.setAttribute('aria-label','Currently reading');
 
-  const book=document.createElement('div'); book.className='book'; book.style.setProperty('--bookc',coverFor(main.s));
+  const book=document.createElement('div'); book.className='book'; book.style.setProperty('--bookc',spineColor(main.s,main.b.title,main.s==='Standalone'));
   book.innerHTML='<span class="ribbon"></span><div class="frame"><div class="bt"></div><div class="ba"></div></div><div class="bseries"></div>';
   book.querySelector('.bt').textContent=main.b.title;
   book.querySelector('.ba').textContent=sObj?sObj.author:'';
@@ -570,7 +586,7 @@ function buildSpine(s,b,idx,cards,secEntry,standalone){
 
   const bk=document.createElement('div'); bk.className='bk'; bk.dataset.id=id; bk.dataset.series=s.series;
   const spine=document.createElement('div'); spine.className='spine';
-  spine.style.setProperty('--spinec', coverFor(s.series));
+  spine.style.setProperty('--spinec', spineColor(s.series, b.title, standalone));
 
   const grip=document.createElement('span'); grip.className='grip'; grip.innerHTML='\u2807'; grip.title='Drag to reorder';
   const seal=document.createElement('button'); seal.className='seal'; seal.title='Cycle status';
