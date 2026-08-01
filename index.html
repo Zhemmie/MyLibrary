@@ -449,7 +449,7 @@
   </header>
 
   <div class="cabinet">
-    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v23</div>
+    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v24</div>
     <div class="hero" id="hero"></div>
 
     <input type="search" id="q" class="search" placeholder="Search title or author" aria-label="Search titles and authors">
@@ -1719,9 +1719,14 @@ function mergeDuplicates(){
   toast('Merged '+dupSeries+' duplicate series \u2014 ratings & notes kept.','Undo',restore);
 }
 
-function jumpTo(id){ const r=rowMap.get(id); if(!r) return; setTab(r.seriesName==='Standalone'?'singles':'series');
-  collapsed.delete(r.seriesName); openDetails.add(id); buildList(); render();
-  const c=rowMap.get(id); if(c){ if(c.card.scrollIntoView) c.card.scrollIntoView({behavior:'smooth',block:'center'});
+function jumpTo(id){
+  const found=bookById(id); if(!found) return;
+  const seriesName=found.s.series, standalone=(seriesName==='Standalone');
+  setTab(standalone?'singles':'series');
+  collapsed.delete(seriesName); openDetails.add(id);
+  buildList(); render();                 /* builds the (now-expanded) drawer, populating rowMap */
+  const c=rowMap.get(id);
+  if(c){ if(c.card.scrollIntoView) c.card.scrollIntoView({behavior:'smooth',block:'center'});
     c.card.style.transition='box-shadow .3s'; c.card.style.boxShadow='0 0 0 2px var(--ox), 0 18px 26px -14px rgba(40,25,10,.55)';
     setTimeout(()=>{ c.card.style.boxShadow=''; },1400); } }
 function surprise(){ const pool=[]; catalog.series.forEach(s=>s.books.forEach(b=>{ if(statusOf(idOf(s.series,b))==='unread') pool.push({s:s.series,b}); }));
