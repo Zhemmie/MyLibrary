@@ -449,7 +449,7 @@
   </header>
 
   <div class="cabinet">
-    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v21</div>
+    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v22</div>
     <div class="hero" id="hero"></div>
 
     <input type="search" id="q" class="search" placeholder="Search title or author" aria-label="Search titles and authors">
@@ -495,6 +495,7 @@
           <button class="accent" id="btnSurprise">Surprise me</button>
           <span class="spacer"></span>
           <button id="btnCollapse">Collapse all</button>
+          <button id="btnDedupe">Merge duplicate series</button>
           <button id="btnTxt">Export .txt</button>
           <button id="btnMd">Export .md</button>
           <button id="btnCsv">Export .csv</button>
@@ -584,14 +585,20 @@ if(!meta.t) meta.t={}; if(!meta.del) meta.del={};
 
 /* stable ids: assigned once, never derived from text, so renames never orphan data */
 function newId(p){ return p+Date.now().toString(36)+Math.random().toString(36).slice(2,9); }
+/* deterministic id from stable content, so two devices migrating the SAME legacy
+   catalog derive identical ids and never duplicate after a sync */
+function detId(prefix,key,used){ let id=prefix+(hashStr(key)>>>0).toString(36);
+  while(used && used.has(id)) id+='x'; if(used) used.add(id); return id; }
 function normalizeCatalog(){
   let changed=false;
+  const usedS=new Set((catalog.series||[]).map(s=>s.sid).filter(Boolean));
   (catalog.series||[]).forEach(s=>{
-    if(!s.sid){ s.sid=newId('s_'); changed=true; }
+    if(!s.sid){ s.sid=detId('s_','S|'+(s.series||''),usedS); changed=true; }
+    const usedB=new Set((s.books||[]).map(b=>b.id).filter(Boolean));
     (s.books||[]).forEach(b=>{
       if(!b.id){
         const legacy=s.series+'|'+b.num+'|'+b.title;   /* pre-id key */
-        b.id=newId('b_'); changed=true;
+        b.id=detId('b_','B|'+(s.series||'')+'|'+(b.num||'')+'|'+(b.title||''),usedB); changed=true;
         if(status[legacy]!==undefined){ status[b.id]=status[legacy]; delete status[legacy]; }
         if(ratings[legacy]!==undefined){ ratings[b.id]=ratings[legacy]; delete ratings[legacy]; }
         if(details[legacy]!==undefined){ details[b.id]=details[legacy]; delete details[legacy]; }
@@ -697,7 +704,11 @@ const singlesEl=document.getElementById('singles');
 const heroEl=document.getElementById('hero');
 let rowMap=new Map(), sections=[];
 
-function ensureStandalone(){ if(!catalog.series.some(s=>s.series==='Standalone')) catalog.series.push({sid:newId('s_'),series:'Standalone',author:'',books:[]}); }
+const STANDALONE_SID='s_standalone';
+function ensureStandalone(){ const s=catalog.series.find(s=>s.series==='Standalone');
+  if(!s){ catalog.series.push({sid:STANDALONE_SID,series:'Standalone',author:'',books:[]}); }
+  else if(s.sid!==STANDALONE_SID){ s.sid=STANDALONE_SID; }  /* heal any random id from an older build */
+}
 function findSeries(n){ return catalog.series.find(s=>s.series===n); }
 function paintStars(els,n){ els.forEach((el,i)=>el.classList.toggle('on',i<n)); }
 function hayFor(s,b){ return (s.series+' '+(s.author||'')+' '+b.title).toLowerCase(); }
@@ -1659,6 +1670,55 @@ function doUndo(){ if(!undo) return;
     touch(undo.entry.sid); (undo.entry.books||[]).forEach(b=>touch(b.id)); touch('__order'); }
   undo=null; sCat(); sSt(); sRt(); sDet(); buildList(); render(); }
 
+/* --- repair: collapse duplicate series (same name) without losing any progress --- */
+function normName(n){ return String(n||'').trim().toLowerCase(); }
+function bookKey(b){ return (String(b.num||'').trim())+'|'+String(b.title||'').trim().toLowerCase(); }
+function progScore(id){ let n=0; if(ratings[id]!=null) n+=2;
+  const d=details[id]; if(d&&(d.notes||d.finished||d.started||d.ptot||d.pcur||(d.reads&&d.reads.length))) n+=2;
+  if(status[id]&&status[id]!=='unread') n+=1; return n; }
+function seriesScore(s){ return (s.books||[]).reduce((a,b)=>a+progScore(b.id),0); }
+function mergeDuplicates(){
+  const groups=new Map();
+  catalog.series.forEach(s=>{ const k=normName(s.series); if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(s); });
+  let dupSeries=0; groups.forEach(l=>{ if(l.length>1) dupSeries+=l.length-1; });
+  if(!dupSeries){ toast('No duplicate series found.'); return; }
+  const snapCat=structuredClone(catalog), snapSt={...status}, snapRt={...ratings},
+        snapDet=structuredClone(details), snapMeta=structuredClone(meta);
+  const keepSids=new Set();
+  groups.forEach(list=>{
+    if(list.length<2){ if(list[0]) keepSids.add(list[0].sid); return; }
+    list.sort((a,b)=> seriesScore(b)-seriesScore(a) || (b.books.length-a.books.length));
+    const keep=list[0]; keepSids.add(keep.sid);
+    const kmap=new Map(); keep.books.forEach(b=>kmap.set(bookKey(b),b));
+    list.slice(1).forEach(dup=>{
+      (dup.books||[]).forEach(db=>{
+        const kb=kmap.get(bookKey(db));
+        if(kb){ /* union progress onto the survivor's id, never overwriting existing data */
+          if(ratings[kb.id]==null && ratings[db.id]!=null) ratings[kb.id]=ratings[db.id];
+          if((status[kb.id]==null||status[kb.id]==='unread') && status[db.id] && status[db.id]!=='unread') status[kb.id]=status[db.id];
+          const dd=details[db.id];
+          if(dd){ const kd=details[kb.id]||{};
+            ['started','finished','notes','ptot','pcur','fmt','color','next'].forEach(f=>{ if(kd[f]==null && dd[f]!=null) kd[f]=dd[f]; });
+            if((!kd.reads||!kd.reads.length) && dd.reads && dd.reads.length) kd.reads=dd.reads.slice();
+            if(Object.keys(kd).length) details[kb.id]=kd; }
+          tomb(db.id); delete ratings[db.id]; delete status[db.id]; delete details[db.id];
+        } else { /* unique book: fold it into the survivor, keeping its id + progress */
+          keep.books.push(db); kmap.set(bookKey(db),db); touch(db.id);
+        }
+      });
+      tomb(dup.sid);
+    });
+    touch(keep.sid);
+  });
+  catalog.series = catalog.series.filter(s=> keepSids.has(s.sid));
+  touch('__order'); ensureStandalone();
+  sCat(); sSt(); sRt(); sDet(); sMeta(); buildList(); render();
+  const restore=()=>{ catalog=structuredClone(snapCat); status=snapSt; ratings=snapRt;
+    details=structuredClone(snapDet); meta=structuredClone(snapMeta);
+    sCat(); sSt(); sRt(); sDet(); sMeta(); buildList(); render(); toast('Merge undone.'); };
+  toast('Merged '+dupSeries+' duplicate series \u2014 ratings & notes kept.','Undo',restore);
+}
+
 function jumpTo(id){ const r=rowMap.get(id); if(!r) return; setTab(r.seriesName==='Standalone'?'singles':'series');
   collapsed.delete(r.seriesName); openDetails.add(id); buildList(); render();
   const c=rowMap.get(id); if(c){ if(c.card.scrollIntoView) c.card.scrollIntoView({behavior:'smooth',block:'center'});
@@ -1702,6 +1762,7 @@ document.getElementById('impfile').onchange=e=>{ const f=e.target.files[0]; if(!
     try{ if(isCsv) importCSV(txt); else importTxt(txt); }
     catch(err){ toast('Could not read that file.'); } };
   fr.readAsText(f); e.target.value=''; };
+document.getElementById('btnDedupe').onclick=()=>mergeDuplicates();
 document.getElementById('btnCollapse').onclick=()=>{ const anyOpen=catalog.series.some(s=>s.series!=='Standalone' && !collapsed.has(s.series)); const btn=document.getElementById('btnCollapse');
   if(anyOpen){ catalog.series.forEach(s=>{ if(s.series!=='Standalone') collapsed.add(s.series); }); btn.textContent='Expand all'; } else { collapsed.clear(); btn.textContent='Collapse all'; }
   buildList(); render(); };
@@ -1751,7 +1812,12 @@ document.getElementById('file').onchange=e=>{ const f=e.target.files[0]; if(!f) 
       if(p&&p.catalog){ catalog=p.catalog; status=p.status||{}; ratings=p.ratings||{}; details=p.details||{};
         if(p.meta&&p.meta.t) meta=p.meta; }
       else { status=p; ratings={}; details={}; }
-      normalizeCatalog(); ensureStandalone(); sMeta();
+      normalizeCatalog(); ensureStandalone();
+      /* recovery-safe: drop old delete marks and stamp everything current so a restored
+         backup wins on the next sync instead of being re-deleted by a stale tombstone */
+      meta.del={}; const _now=Date.now();
+      catalog.series.forEach(s=>{ meta.t[s.sid]=_now; (s.books||[]).forEach(b=>meta.t[b.id]=_now); });
+      meta.t['__order']=_now; sMeta();
       sCat(); sSt(); sRt(); sDet(); buildList(); render(); toast('Backup loaded.'); }
     catch(err){ toast('That file is not a valid backup.'); } };
   fr.readAsText(f); e.target.value=''; };
