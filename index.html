@@ -449,7 +449,7 @@
   </header>
 
   <div class="cabinet">
-    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v22</div>
+    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v23</div>
     <div class="hero" id="hero"></div>
 
     <input type="search" id="q" class="search" placeholder="Search title or author" aria-label="Search titles and authors">
@@ -1809,16 +1809,36 @@ document.getElementById('btnSave').onclick=()=>{ download('reading-list-backup.j
 document.getElementById('btnLoad').onclick=()=>document.getElementById('file').click();
 document.getElementById('file').onchange=e=>{ const f=e.target.files[0]; if(!f) return; const fr=new FileReader();
   fr.onload=()=>{ try{ const p=JSON.parse(fr.result);
-      if(p&&p.catalog){ catalog=p.catalog; status=p.status||{}; ratings=p.ratings||{}; details=p.details||{};
-        if(p.meta&&p.meta.t) meta=p.meta; }
-      else { status=p; ratings={}; details={}; }
-      normalizeCatalog(); ensureStandalone();
-      /* recovery-safe: drop old delete marks and stamp everything current so a restored
-         backup wins on the next sync instead of being re-deleted by a stale tombstone */
-      meta.del={}; const _now=Date.now();
-      catalog.series.forEach(s=>{ meta.t[s.sid]=_now; (s.books||[]).forEach(b=>meta.t[b.id]=_now); });
-      meta.t['__order']=_now; sMeta();
-      sCat(); sSt(); sRt(); sDet(); buildList(); render(); toast('Backup loaded.'); }
+      const hasCat = p && p.catalog && Array.isArray(p.catalog.series);
+      const hasProg = p && (p.status||p.ratings||p.details);
+      if(hasCat){
+        catalog=p.catalog;
+        /* only replace progress if this file actually carries it (the gist catalog
+           file has none) so loading it doesn't wipe ratings already on the device */
+        if(hasProg){ status=p.status||{}; ratings=p.ratings||{}; details=p.details||{}; }
+        if(p.meta&&p.meta.t) meta=p.meta;
+        normalizeCatalog(); ensureStandalone();
+        meta.del={}; const _now=Date.now();
+        catalog.series.forEach(s=>{ meta.t[s.sid]=_now; (s.books||[]).forEach(b=>meta.t[b.id]=_now); });
+        meta.t['__order']=_now; sMeta();
+        sCat(); sSt(); sRt(); sDet(); buildList(); render(); toast('Backup loaded \u2713');
+      } else if(hasProg){
+        /* progress-only file (reading-desk-progress.json): merge ratings/status/notes
+           onto the books already here, matching by id. Recovers a lost progress file. */
+        let hits=0; const now=Date.now();
+        Object.entries(p.status||{}).forEach(([id,v])=>{ status[id]=v; });
+        Object.entries(p.ratings||{}).forEach(([id,v])=>{ if(v) ratings[id]=v; });
+        Object.entries(p.details||{}).forEach(([id,v])=>{ if(v && Object.keys(v).length) details[id]=v; });
+        const live=new Set(); catalog.series.forEach(s=>s.books.forEach(b=>live.add(b.id)));
+        [...new Set([].concat(Object.keys(p.status||{}),Object.keys(p.ratings||{}),Object.keys(p.details||{})))]
+          .forEach(id=>{ meta.t[id]=now; if(meta.del) delete meta.del[id]; if(live.has(id)) hits++; });
+        sSt(); sRt(); sDet(); sMeta(); buildList(); render();
+        const total=new Set([].concat(Object.keys(p.status||{}),Object.keys(p.ratings||{}),Object.keys(p.details||{}))).size;
+        toast('Recovered progress for '+hits+' of '+total+' books.'+(hits<total?' Load the catalog file too for the rest.':''));
+      } else if(p && typeof p==='object'){
+        status=p; ratings={}; details={}; ensureStandalone();
+        sSt(); sRt(); sDet(); buildList(); render(); toast('Backup loaded \u2713');
+      } else { toast('That file is not a valid backup.'); } }
     catch(err){ toast('That file is not a valid backup.'); } };
   fr.readAsText(f); e.target.value=''; };
 
