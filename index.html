@@ -449,7 +449,7 @@
   </header>
 
   <div class="cabinet">
-    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v24</div>
+    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v25</div>
     <div class="hero" id="hero"></div>
 
     <input type="search" id="q" class="search" placeholder="Search title or author" aria-label="Search titles and authors">
@@ -526,6 +526,7 @@
               <select id="nbSeries" aria-label="Series for new book"></select>
               <input class="small" id="nbNum" placeholder="#" aria-label="Book number, optional">
               <input id="nbTitle" placeholder="Title" aria-label="New book title">
+              <input id="nbAuthor" placeholder="Author (for standalones)" aria-label="New book author, optional">
               <div class="fmttoggle" id="nbFmt" role="group" aria-label="Format">
                 <button type="button" data-fmt="book" aria-pressed="true">Book</button>
                 <button type="button" data-fmt="audio" aria-pressed="false">Audiobook</button>
@@ -711,7 +712,9 @@ function ensureStandalone(){ const s=catalog.series.find(s=>s.series==='Standalo
 }
 function findSeries(n){ return catalog.series.find(s=>s.series===n); }
 function paintStars(els,n){ els.forEach((el,i)=>el.classList.toggle('on',i<n)); }
-function hayFor(s,b){ return (s.series+' '+(s.author||'')+' '+b.title).toLowerCase(); }
+function hayFor(s,b){ return (s.series+' '+(authorOf(s,b)||'')+' '+b.title).toLowerCase(); }
+/* effective author for a book: a standalone carries its own, a series book inherits the series' */
+function authorOf(s,b){ return (b&&b.author) ? b.author : (s?s.author:'') || ''; }
 
 function populateSelects(){
   ['nbSeries','npSeries'].forEach(id=>{ const sel=document.getElementById(id); const prev=sel.value; sel.innerHTML='';
@@ -736,7 +739,7 @@ function renderHero(){
   const art=document.createElement('section'); art.className='featured'; art.setAttribute('aria-label','Currently reading');
 
   const book=document.createElement('div'); book.className='book';
-  const _std=(main.s==='Standalone'), _seed=seedOf(main.s,main.b.title,_std), _auth=(sObj?sObj.author:'');
+  const _std=(main.s==='Standalone'), _seed=seedOf(main.s,main.b.title,_std), _auth=authorOf(sObj,main.b);
   const _col=spineColor(main.s,main.b.title,_std,id);
   const _light=det(id).color?(hexToHsl(det(id).color).l>58):isLight(_seed);
   const _foil=foilFor(_seed), _acc=themed(accentFor(_auth,_seed)), _text=_light?'#2a2018':'#f0e6cd';
@@ -824,7 +827,7 @@ function decorateSpine(spine, s, b, id, standalone){
   const light=override?(hexToHsl(override).l>58):isLight(seed);
   const text=light?'#2a2018':'#f0e6cd';
   const foil=foilFor(seed);
-  const acc=themed(accentFor(s.author,seed));
+  const acc=themed(accentFor(authorOf(s,b),seed));
   spine.style.setProperty('--spinec', col);
   spine.style.setProperty('--sptext', text);
   spine.style.setProperty('--spnum', light?'rgba(0,0,0,.10)':'rgba(0,0,0,.24)');
@@ -1031,11 +1034,14 @@ function buildDetail(s,b,id,standalone){
   const ren=document.createElement('div'); ren.className='drow';
   const rn=document.createElement('input'); rn.className='num'; rn.value=b.num; rn.placeholder='#'; rn.setAttribute('aria-label','Book number');
   const rt=document.createElement('input'); rt.value=b.title; rt.setAttribute('aria-label','Book title');
-  const rb=document.createElement('button'); rb.className='dact'; rb.textContent='Rename';
-  rb.onclick=()=>renameBook(s.series,b, standalone? b.num : rn.value, rt.value);
-  [rn,rt].forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')rb.click();}));
+  const ra=document.createElement('input'); ra.value=b.author||''; ra.placeholder='Author'; ra.setAttribute('aria-label','Author');
+  const rb=document.createElement('button'); rb.className='dact'; rb.textContent='Save';
+  rb.onclick=()=>renameBook(s.series,b, standalone? b.num : rn.value, rt.value, standalone? ra.value : undefined);
+  [rn,rt,ra].forEach(el=>el.addEventListener('keydown',e=>{if(e.key==='Enter')rb.click();}));
   if(!standalone) ren.append(mk('Number',rn));
-  ren.append(mk('Title',rt,'title'), rb);
+  ren.append(mk('Title',rt,'title'));
+  if(standalone) ren.append(mk('Author',ra,'title'));
+  ren.append(rb);
   wrap.appendChild(ren);
 
   /* 2) dates + pages (+ reorder for series) */
@@ -1387,6 +1393,7 @@ function importCSV(text){
       touch(s.sid); touch('__order'); }
     else if(!s.author && author){ s.author=author; touch(s.sid); }
     const entry={id:newId('b_'), num:(seriesName==='Standalone'?'':parsed.num||''), title};
+    if(seriesName==='Standalone' && author) entry.author=author;
     if(entry.num) insertByNumber(s.books,entry); else s.books.push(entry);
     existing.add((seriesName+'|'+title).toLowerCase());
     const st=cS>=0?mapShelf(r[cS]):'unread';
@@ -1410,7 +1417,7 @@ function importTxt(text){
   let mode='series', cur=null, added=0, skipped=0;
   const existing=new Set();
   catalog.series.forEach(s=>s.books.forEach(b=>existing.add((s.series+'|'+b.title).toLowerCase())));
-  const addTo=(sname,num,title)=>{
+  const addTo=(sname,num,title,bauthor)=>{
     if(!title) return;
     if(existing.has((sname+'|'+title).toLowerCase())){ skipped++; return; }
     let s=findSeries(sname);
@@ -1418,7 +1425,7 @@ function importTxt(text){
       const si=catalog.series.findIndex(x=>x.series==='Standalone');
       if(sname!=='Standalone'&&si>=0) catalog.series.splice(si,0,s); else catalog.series.push(s);
       touch(s.sid); touch('__order'); }
-    const e={id:newId('b_'),num:num||'',title};
+    const e={id:newId('b_'),num:num||'',title}; if(bauthor) e.author=bauthor;
     if(e.num) insertByNumber(s.books,e); else s.books.push(e);
     existing.add((sname+'|'+title).toLowerCase()); touch(e.id); touch(s.sid); added++;
   };
@@ -1428,7 +1435,8 @@ function importTxt(text){
     if(/^my reading list$/i.test(t)) return;
     if(/^book series$/i.test(t)){ mode='series'; cur=null; return; }
     if(/^stand ?alone books$/i.test(t)){ mode='single'; cur=null; return; }
-    if(mode==='single'){ const p=parseLine(t); if(p) addTo('Standalone','',p.title); return; }
+    if(mode==='single'){ const dash=t.split(' - '); const ttl=dash[0].trim(); const au=dash.length>1?dash.slice(1).join(' - ').trim():'';
+      if(ttl) addTo('Standalone','',ttl,au); return; }
     if(/^[\t ]{1,}/.test(line) && cur){ const p=parseLine(t); if(p) addTo(cur,p.num,p.title); return; }
     const dash=t.split(' - ');
     const name=dash[0].trim(); const auth=dash.length>1?dash.slice(1).join(' - ').trim():'';
@@ -1473,7 +1481,7 @@ function exportCSV(){
   const rows=[['Series','Author','Number','Title','Format','Status','Rating','Started','Finished','Progress','Total','Times read','Notes']];
   catalog.series.forEach(s=>s.books.forEach(b=>{
     const id=b.id, d=details[id]||{};
-    rows.push([s.series,s.author,b.num,b.title,(d.fmt==='audio'?'Audiobook':'Book'),
+    rows.push([s.series,authorOf(s,b),b.num,b.title,(d.fmt==='audio'?'Audiobook':'Book'),
       ST_LABEL[statusOf(id)]||'Unread', ratings[id]||'', d.started||'', d.finished||'',
       d.pcur||'', d.ptot||'', (d.reads?d.reads.length+1:(statusOf(id)==='read'?1:0)), d.notes||'']);
   }));
@@ -1493,7 +1501,7 @@ function computeStats(){
     const all=[].concat(d.reads||[], (sta==='read'&&d.finished)?[{finished:d.finished}]:[]);
     all.forEach(x=>{ if(!x.finished) return; const y=String(x.finished).slice(0,4);
       st.byYear[y]=(st.byYear[y]||0)+1; st.finishes.push(x.finished);
-      const a=(s.author||'').trim(); if(a) st.authors[a]=(st.authors[a]||0)+1; });
+      const a=(authorOf(s,b)||'').trim(); if(a) st.authors[a]=(st.authors[a]||0)+1; });
     if(sta==='read'&&d.ptot){ if(d.fmt==='audio') st.chapters+=+d.ptot||0; else st.pages+=+d.ptot||0; }
   }));
   st.avg=st.rated?(st.ratingSum/st.rated):0;
@@ -1599,10 +1607,10 @@ function addSeries(name,author){ name=name.trim(); author=author.trim();
   touch(entry.sid); touch('__order');
   sCat(); buildList(); render(); toast('Added series \u201c'+name+'\u201d.'); }
 function setFormat(id,fmt){ const d=det(id); if(fmt==='audio') d.fmt='audio'; else delete d.fmt; touch(id); sDet(); buildList(); render(); }
-function addBook(sn,num,title,fmt){ title=title.trim(); num=num.trim();
+function addBook(sn,num,title,fmt,author){ title=title.trim(); num=num.trim(); author=(author||'').trim();
   if(!title){ toast('Give the book a title first.'); return; }
   const s=findSeries(sn); if(!s){ toast('Pick a series.'); return; }
-  const entry={id:newId('b_'),num,title};
+  const entry={id:newId('b_'),num,title}; if(author) entry.author=author;
   insertByNumber(s.books,entry);
   if(fmt==='audio'){ det(entry.id).fmt='audio'; sDet(); }
   touch(entry.id); touch(s.sid);
@@ -1618,9 +1626,11 @@ function addList(sn,text){ const s=findSeries(sn); if(!s){ toast('Pick a series 
   touch(s.sid);
   sCat(); buildList(); render(); toast('Added '+added+' book'+(added>1?'s':'')+' to '+sn+(skipped?' ('+skipped+' skipped)':'')+'.'); }
 
-function renameBook(sn,b,num,title){ title=title.trim(); num=num.trim();
+function renameBook(sn,b,num,title,author){ title=title.trim(); num=num.trim();
   if(!title){ toast('A book needs a title.'); return; }
-  b.num=num; b.title=title; touch(b.id);
+  b.num=num; b.title=title;
+  if(author!==undefined){ author=author.trim(); if(author) b.author=author; else delete b.author; }
+  touch(b.id);
   sCat(); buildList(); render(); toast('Updated.'); }
 function saveSeriesEdit(oldName,newName,newAuthor){ newName=newName.trim(); newAuthor=newAuthor.trim();
   if(!newName){ toast('A series needs a name.'); return; }
@@ -1782,7 +1792,7 @@ document.getElementById('ctrlHead').onclick=()=>{ const open=ctrl.classList.togg
   document.getElementById('ctrlHead').setAttribute('aria-expanded', String(open)); };
 document.querySelectorAll('#nbFmt button').forEach(b=>{ b.onclick=()=>{ addFmt=b.dataset.fmt;
   document.querySelectorAll('#nbFmt button').forEach(x=>x.setAttribute('aria-pressed', String(x.dataset.fmt===addFmt))); }; });
-document.getElementById('nbGo').onclick=()=>{ addBook(nbSeries.value,nbNum.value,nbTitle.value,addFmt); nbNum.value=''; nbTitle.value=''; };
+document.getElementById('nbGo').onclick=()=>{ addBook(nbSeries.value,nbNum.value,nbTitle.value,addFmt,document.getElementById('nbAuthor').value); nbNum.value=''; nbTitle.value=''; document.getElementById('nbAuthor').value=''; };
 document.getElementById('npGo').onclick=()=>{ addList(npSeries.value,npText.value); npText.value=''; };
 ['nsName','nsAuthor'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('nsGo').click();}));
 ['nbNum','nbTitle'].forEach(id=>document.getElementById(id).addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('nbGo').click();}));
@@ -1800,7 +1810,7 @@ document.getElementById('btnCopy').onclick=()=>{
   catalog.series.forEach(s=>s.books.forEach(b=>{ const id=idOf(s.series,b); const st=statusOf(id); const d=details[id]||{};
     const unit=(d.fmt==='audio')?'ch ':'p ';
     const prog=(d.pcur||d.ptot)?(unit+(d.pcur||'')+'/'+(d.ptot||'')):'';
-    rows.push([s.series,s.author,b.num,b.title,(d.fmt==='audio'?'Audiobook':'Book'),st[0].toUpperCase()+st.slice(1),ratings[id]||'',d.started||'',d.finished||'',prog,(d.notes||'').replace(/\s+/g,' ')].join('\t')); }));
+    rows.push([s.series,authorOf(s,b),b.num,b.title,(d.fmt==='audio'?'Audiobook':'Book'),st[0].toUpperCase()+st.slice(1),ratings[id]||'',d.started||'',d.finished||'',prog,(d.notes||'').replace(/\s+/g,' ')].join('\t')); }));
   const text=rows.join('\n'); const done=()=>toast('Copied. Paste into your sheet.');
   if(navigator.clipboard&&window.isSecureContext) navigator.clipboard.writeText(text).then(done,()=>fbCopy(text,done)); else fbCopy(text,done); };
 function fbCopy(text,done){ const ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;opacity:0'; document.body.appendChild(ta); ta.select();
@@ -1808,7 +1818,7 @@ function fbCopy(text,done){ const ta=document.createElement('textarea'); ta.valu
 document.getElementById('btnTxt').onclick=()=>{ const out=['My Reading List','','Book Series',''];
   catalog.series.filter(s=>s.series!=='Standalone').forEach(s=>{ out.push(s.author?s.series+' - '+s.author:s.series);
     s.books.forEach(b=>out.push('\t'+(b.num?b.num+'. ':'')+b.title)); out.push(''); });
-  const sa=findSeries('Standalone'); if(sa&&sa.books.length){ out.push('Stand Alone Books'); sa.books.forEach(b=>out.push(b.title)); }
+  const sa=findSeries('Standalone'); if(sa&&sa.books.length){ out.push('Stand Alone Books'); sa.books.forEach(b=>out.push(b.title+(b.author?' - '+b.author:''))); }
   download('MyReadingList.txt',out.join('\n'),'text/plain'); toast('List exported as .txt.'); };
 document.getElementById('btnSave').onclick=()=>{ download('reading-list-backup.json',JSON.stringify({version:5,catalog,status,ratings,details,meta},null,1),'application/json'); noteBackup(); toast('Backup saved.'); };
 document.getElementById('btnLoad').onclick=()=>document.getElementById('file').click();
