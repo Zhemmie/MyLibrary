@@ -54,6 +54,7 @@
 
   /* ---------- HERO (currently reading) ---------- */
   .hero{margin:26px 0 6px}
+  .herostack{display:flex;flex-direction:column;gap:22px}
   .featured{display:grid;grid-template-columns:auto 1fr;gap:30px;align-items:center;
     padding:24px 28px;border-radius:6px;position:relative;
     background:linear-gradient(180deg,#f3ead3,#e9ddbf);
@@ -105,13 +106,6 @@
   .btn-ghost{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;
     background:transparent;border:1.5px solid var(--brown);color:var(--brown);padding:8px 14px;border-radius:3px;cursor:pointer;transition:background .2s,color .2s}
   .btn-ghost:hover{background:var(--brown);color:var(--gold-hi)}
-  .also{margin-top:14px;display:flex;flex-direction:column;gap:8px}
-  .also .a{display:flex;align-items:center;gap:12px;font-family:var(--mono);font-size:12px;color:var(--ink-soft);
-    background:#00000008;border:1px solid var(--card-edge);border-radius:3px;padding:8px 12px}
-  .also .a b{font-family:var(--disp);font-weight:600;font-size:16px;color:var(--ink);letter-spacing:0}
-  .also .a .mini{margin-left:auto;display:flex;gap:6px}
-  .also .a button{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;background:transparent;border:1px solid var(--card-edge);color:var(--ink-soft);padding:5px 8px;border-radius:2px;cursor:pointer}
-  .also .a button:hover{border-color:var(--brown);color:var(--brown)}
   .empty-hero{padding:30px 28px;border-radius:6px;text-align:center;
     background:linear-gradient(180deg,#f0e6cd,#e7dabc);box-shadow:inset 0 0 0 1px #ffffff55, inset 0 0 0 2px #d8c9a4}
   .empty-hero .big{font-family:var(--disp);font-weight:600;font-size:24px;color:var(--brown-2)}
@@ -157,7 +151,8 @@
   input::placeholder,textarea::placeholder{color:var(--dim)}
   .chips{display:flex;border:1px solid var(--edge-dark);border-radius:3px;overflow:hidden}
   .chips button{background:#2b1f12;border:0;border-right:1px solid var(--edge-dark);color:var(--on-dark-soft);
-    font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:8px 11px;cursor:pointer}
+    font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;padding:8px 11px;cursor:pointer;
+    font-variant-numeric:tabular-nums}
   .chips button:last-child{border-right:0}
   .chips button[aria-pressed=true]{background:var(--gold-dim);color:#20160c}
   .tools{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
@@ -167,7 +162,10 @@
   #btnAdd[aria-pressed=true]{background:var(--gold-dim);color:#20160c;border-color:var(--gold-dim)}
   #btnSync[aria-pressed=true]{background:var(--gold-dim);color:#20160c;border-color:var(--gold-dim)}
   #btnSync.on{border-color:var(--gold-dim);color:var(--gold-hi)}
-  .subbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;padding-bottom:14px}
+  .subbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;padding-bottom:10px}
+  .grouplbl{display:block;font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;
+    color:#8a7248;margin:10px 0 6px;padding-top:10px;border-top:1px solid var(--edge-dark)}
+  .grouplbl:first-of-type{border-top:0;padding-top:0;margin-top:0}
   .subbar .lbl{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--on-dark-soft)}
   .subbar select{cursor:pointer;color:var(--on-dark-soft)}
   .subbar .accent:hover{border-color:var(--ox);color:var(--ox)}
@@ -198,24 +196,32 @@
   .brass .sgrip{margin-left:2px;font-size:12px;color:#5c4a1e;cursor:grab;opacity:0;transition:opacity .15s;user-select:none}
   .brass:hover .sgrip,.sgrip:focus-visible{opacity:1}
   .brass .sgrip:active{cursor:grabbing}
-  .brass{position:relative;display:flex;align-items:center;gap:12px;flex-wrap:wrap;row-gap:8px;padding:11px 20px;border-radius:4px;z-index:3;
+  .brass{position:relative;display:grid;grid-template-columns:auto auto minmax(80px,max-content) minmax(0,1fr) auto auto auto;
+    column-gap:12px;align-items:center;padding:11px 20px;border-radius:4px;z-index:3;
     background:linear-gradient(180deg,#eadaa0 0%, #d3b25e 20%, #b9922c 52%, #a5811f 70%, #d8bf78 100%);
     box-shadow:0 6px 16px -8px rgba(60,40,10,.6), inset 0 1px 0 #fff8, inset 0 -2px 3px #7a5c1466;
     border:1px solid #8a6c1e;border-top:2px solid #6b520f;cursor:pointer}
   .brass::before,.brass::after{content:"";position:absolute;top:50%;width:7px;height:7px;border-radius:50%;transform:translateY(-50%);
     background:radial-gradient(circle at 35% 30%,#fff6cf,#8a6c1e);box-shadow:inset 0 0 0 1px #6b520f}
   .brass::before{left:9px}.brass::after{right:9px}
-  .brass .caret{margin-left:6px;font-size:10px;color:#4a3a12}
+  .brass .caret{font-size:10px;color:#4a3a12}
   /* recessed cream paper label, like the card-catalog holder */
   .brass h3{font-family:var(--type);font-weight:400;font-size:16px;line-height:1.15;margin:0;letter-spacing:.01em;color:#2c2113;
-    background:linear-gradient(180deg,#f7efd8,#e8dab7);padding:5px 14px;border-radius:2px;
+    background:linear-gradient(180deg,#f7efd8,#e8dab7);padding:5px 14px;border-radius:2px;white-space:nowrap;
     box-shadow:inset 0 1px 3px rgba(80,55,20,.4), inset 0 -1px 0 #fff9, 0 1px 0 #fff5, 0 0 0 1px #7a5c14;}
-  .brass .auth{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#3a2c0e}
-  .brass .tally{margin-left:auto;font-family:var(--mono);font-size:12px;color:#3a2c0e;white-space:nowrap}
+  .brass .auth{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#3a2c0e;
+    min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .brass .tally{font-family:var(--mono);font-size:12px;color:#3a2c0e;white-space:nowrap;justify-self:end}
   .brass .tally b{color:#2e2409}
   .brass .sbtn{background:none;border:0;color:#4a3a12;cursor:pointer;padding:3px 6px;font-size:12px;opacity:0;transition:opacity .15s,color .15s}
   .brass:hover .sbtn,.sbtn:focus-visible{opacity:1}
   .brass .sbtn:hover{color:#2e2409}
+  .sprog{position:absolute;left:0;right:0;bottom:0;height:5px;background:#5a430e33;border-radius:0 0 4px 4px;overflow:hidden}
+  .sprog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#4a3708,#20180a);box-shadow:inset 0 1px 0 rgba(255,255,255,.15);transition:width .4s ease}
+  @media (max-width:640px){
+    .brass{grid-template-columns:auto auto minmax(0,1fr) auto auto auto;column-gap:8px;padding:10px 14px}
+    .brass .auth{display:none}
+  }
 
   .cards{background:linear-gradient(180deg,var(--drawer-a),var(--drawer-b));border:1px solid #2c1c0f;border-top:0;
     border-radius:0 0 6px 6px;padding:16px 14px 18px;margin-top:-3px;
@@ -338,12 +344,16 @@
   .fmttoggle button:last-child{border-right:0}
   .fmttoggle button[aria-pressed=true]{background:var(--brown);color:var(--gold-hi)}
   .syncfix{margin-top:12px;padding-top:12px;border-top:1px dashed var(--card-edge);display:flex;flex-direction:column;gap:8px}
+  .devlist{display:flex;flex-direction:column;gap:5px}
+  .devrow{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:11px;color:var(--ink-soft);
+    padding:5px 9px;border-radius:3px;background:#00000006}
+  .devrow.me{color:var(--brown);font-weight:600;background:#00000010}
+  .devtm{color:var(--dim);flex:none}
   .go.danger{background:transparent;border:1px solid var(--ox);color:var(--ox)}
   .go.danger:hover{background:var(--ox);color:var(--creme-hi)}
   .go.danger.armed{background:var(--ox);color:var(--creme-hi);animation:armpulse 1s ease-in-out infinite}
   @keyframes armpulse{0%,100%{opacity:1}50%{opacity:.72}}
-  .sprog{position:absolute;left:0;right:0;bottom:0;height:3px;background:#7a5c1433;border-radius:0 0 4px 4px;overflow:hidden}
-  .sprog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#6b5210,#3f2f08);transition:width .4s ease}
+  .subbar button.armed{background:var(--gold-dim);color:#20160c;border-color:var(--gold-dim);animation:armpulse 1s ease-in-out infinite}
   .stactions{display:flex;gap:6px;flex-wrap:wrap}
   .swatches{display:flex;flex-wrap:wrap;gap:6px}
   .sw{width:22px;height:22px;border-radius:3px;cursor:pointer;border:1px solid #00000033;background:var(--sc,#43291d);padding:0}
@@ -389,6 +399,11 @@
     font-family:var(--mono);font-size:13px;padding:9px 11px;border-radius:3px;width:100%}
   .modal textarea{min-height:96px;resize:vertical;line-height:1.5}
   .modal.wide{max-width:520px}
+  .legend-list{display:flex;flex-direction:column;gap:14px;margin:6px 0 18px}
+  .legend-row{display:flex;align-items:center;gap:14px}
+  .legend-ic{flex:none;width:28px;text-align:center;font-size:16px;color:var(--brown-2)}
+  .lg-seal{display:inline-block;width:6px;height:22px;border-radius:2px;margin:0 11px}
+  .legend-tx{font-family:var(--disp);font-size:14px;color:var(--ink);line-height:1.4}
   .statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:4px 0 18px}
   .statcell{background:var(--creme-hi);border:1px solid var(--card-edge);border-radius:4px;padding:12px 8px;text-align:center}
   .statcell b{display:block;font-family:var(--disp);font-size:26px;font-weight:600;color:var(--brown-2);line-height:1.1}
@@ -445,11 +460,11 @@
 <div class="wrap">
   <header>
     <h1>The Reading Desk</h1>
-    <div class="stat"><b id="cRead">0</b> read &nbsp;·&nbsp; <b id="cReading">0</b> open now &nbsp;·&nbsp; <b id="cLeft">0</b> in the drawers &nbsp;·&nbsp; <b id="cTotal">0</b> total</div>
+    <div class="stat"><b id="cRead">0</b> read &nbsp;·&nbsp; <b id="cReading">0</b> reading &nbsp;·&nbsp; <b id="cUnread">0</b> unread &nbsp;·&nbsp; <b id="cDnf">0</b> set aside &nbsp;·&nbsp; <b id="cTotal">0</b> total</div>
   </header>
 
   <div class="cabinet">
-    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v26</div>
+    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v29</div>
     <div class="hero" id="hero"></div>
 
     <input type="search" id="q" class="search" placeholder="Search title or author" aria-label="Search titles and authors">
@@ -477,13 +492,6 @@
             <option value="book">Books</option>
             <option value="audio">Audiobooks</option>
           </select>
-          <span class="lbl">Theme</span>
-          <select id="theme" aria-label="Spine theme">
-            <option value="rare">Rare Books</option>
-            <option value="paperback">Paperback</option>
-            <option value="mono">Monochrome</option>
-            <option value="faded">Sun-faded</option>
-          </select>
           <span class="lbl">Rating</span>
           <select id="rfilter" aria-label="Filter by rating">
             <option value="all">Any</option>
@@ -493,18 +501,39 @@
             <option value="unrated">Unrated</option>
           </select>
           <button class="accent" id="btnSurprise">Surprise me</button>
-          <span class="spacer"></span>
+        </div>
+
+        <span class="grouplbl">Display</span>
+        <div class="subbar">
+          <span class="lbl">Theme</span>
+          <select id="theme" aria-label="Spine theme">
+            <option value="rare">Rare Books</option>
+            <option value="paperback">Paperback</option>
+            <option value="mono">Monochrome</option>
+            <option value="faded">Sun-faded</option>
+          </select>
+          <button id="btnLegend" title="What the symbols and icons mean">? What do the symbols mean</button>
+        </div>
+
+        <span class="grouplbl">Library</span>
+        <div class="subbar">
           <button id="btnCollapse">Collapse all</button>
           <button id="btnDedupe">Merge duplicate series</button>
+        </div>
+
+        <span class="grouplbl">Export</span>
+        <div class="subbar">
           <button id="btnTxt">Export .txt</button>
           <button id="btnMd">Export .md</button>
           <button id="btnCsv">Export .csv</button>
+          <button id="btnCopy">Copy for Sheets</button>
         </div>
+
+        <span class="grouplbl">Account</span>
         <div class="tools">
           <button id="btnAdd" aria-pressed="false">+ Add</button>
           <button id="btnSync" aria-pressed="false">Sync</button>
           <button id="btnStats">Stats</button>
-          <button id="btnCopy">Copy for Sheets</button>
           <button id="btnSave">Save backup</button>
           <button id="btnLoad">Load backup</button>
         </div>
@@ -582,7 +611,7 @@ try{ ratings=JSON.parse(localStorage.getItem(K_RT)||'{}'); }catch(e){ ratings={}
 try{ details=JSON.parse(localStorage.getItem(K_DET)||'{}'); }catch(e){ details={}; }
 try{ const s=localStorage.getItem(K_CAT); catalog=s?JSON.parse(s):structuredClone(SEED); }catch(e){ catalog=structuredClone(SEED); }
 try{ meta=JSON.parse(localStorage.getItem(K_META)||'{"t":{},"del":{}}'); }catch(e){ meta={t:{},del:{}}; }
-if(!meta.t) meta.t={}; if(!meta.del) meta.del={};
+if(!meta.t) meta.t={}; if(!meta.del) meta.del={}; if(!meta.devices) meta.devices={};
 
 /* stable ids: assigned once, never derived from text, so renames never orphan data */
 function newId(p){ return p+Date.now().toString(36)+Math.random().toString(36).slice(2,9); }
@@ -725,22 +754,14 @@ function populateSelects(){
 /* ---------------- HERO ---------------- */
 function readingList(){ const out=[]; catalog.series.forEach(s=>s.books.forEach(b=>{ if(statusOf(idOf(s.series,b))==='reading') out.push({s:s.series,b}); })); return out; }
 
-function renderHero(){
-  const rd=readingList();
-  heroEl.innerHTML='';
-  if(!rd.length){
-    const e=document.createElement('div'); e.className='empty-hero';
-    e.innerHTML='<div class="big">Nothing open right now</div><div class="sm">Tap a book\u2019s circle in the drawers to start reading \u2014 it lands here.</div>';
-    const btn=document.createElement('button'); btn.className='btn-ghost'; btn.textContent='Surprise me';
-    btn.onclick=surprise; e.appendChild(btn); heroEl.appendChild(e); renderUpNext(); return;
-  }
-  const main=rd[0]; const id=idOf(main.s,main.b); const d=det(id);
-  const sObj=findSeries(main.s); const num=main.b.num;
-  const art=document.createElement('section'); art.className='featured'; art.setAttribute('aria-label','Currently reading');
+function buildHeroCard(sName,b){
+  const id=idOf(sName,b); const d=det(id);
+  const sObj=findSeries(sName); const num=b.num;
+  const art=document.createElement('section'); art.className='featured'; art.setAttribute('aria-label','Currently reading: '+b.title);
 
   const book=document.createElement('div'); book.className='book';
-  const _std=(main.s==='Standalone'), _seed=seedOf(main.s,main.b.title,_std), _auth=authorOf(sObj,main.b);
-  const _col=spineColor(main.s,main.b.title,_std,id);
+  const _std=(sName==='Standalone'), _seed=seedOf(sName,b.title,_std), _auth=authorOf(sObj,b);
+  const _col=spineColor(sName,b.title,_std,id);
   const _light=det(id).color?(hexToHsl(det(id).color).l>58):isLight(_seed);
   const _foil=foilFor(_seed), _acc=themed(accentFor(_auth,_seed)), _text=_light?'#2a2018':'#f0e6cd';
   book.style.setProperty('--bookc',_col);
@@ -748,9 +769,9 @@ function renderHero(){
   book.style.setProperty('--bktext',_text); book.style.setProperty('--bkfoil',_foil); book.style.setProperty('--bkacc',_acc);
   book.style.setProperty('--bkttl', isFoilTitle(_seed)?(_light?themed('#7a5c14'):_foil):_text);
   /* procedural cover art (#17) */
-  const _hh=hashStr(main.b.title+'art'); let _art='';
-  const _cols=[_acc,_foil,themed(bookShade(_seed,main.b.title+'x'))];
-  for(let k=0;k<3;k++){ const hk=hashStr(main.b.title+'s'+k);
+  const _hh=hashStr(b.title+'art'); let _art='';
+  const _cols=[_acc,_foil,themed(bookShade(_seed,b.title+'x'))];
+  for(let k=0;k<3;k++){ const hk=hashStr(b.title+'s'+k);
     const round=(hk%3===0), sz=44+hk%116, x=(hk>>>4)%100, y=(hk>>>9)%100, rot=(hk>>>2)%180, op=0.16+((hk>>>7)%22)/100;
     _art+='<span style="position:absolute;left:'+x+'%;top:'+y+'%;width:'+sz+'px;height:'+sz+'px;'+
       'transform:translate(-50%,-50%) rotate('+rot+'deg);background:'+_cols[k]+';opacity:'+op+';'+
@@ -761,13 +782,13 @@ function renderHero(){
   book.innerHTML='<span class="bkart">'+_art+'</span><span class="bkend"></span>'+capHtml+
     '<span class="ribbon"></span><span class="bkorn">'+ornFor(_seed)+'</span>'+
     '<div class="frame"><div class="bt"></div><div class="ba"></div></div><div class="bseries"></div>';
-  book.querySelector('.bt').textContent=main.b.title;
+  book.querySelector('.bt').textContent=b.title;
   book.querySelector('.ba').textContent=_auth;
-  book.querySelector('.bseries').textContent=main.s+(num?' \u00b7 Book '+num:'');
+  book.querySelector('.bseries').textContent=sName+(num?' \u00b7 Book '+num:'');
 
   const meta=document.createElement('div'); meta.className='fmeta';
-  const k=document.createElement('div'); k.className='k'; k.textContent=main.s+(num?' \u00b7 Book '+num:'');
-  const h=document.createElement('h2'); h.textContent=main.b.title;
+  const k=document.createElement('div'); k.className='k'; k.textContent=sName+(num?' \u00b7 Book '+num:'');
+  const h=document.createElement('h2'); h.textContent=b.title;
   const au=document.createElement('div'); au.className='auth'; au.textContent=sObj?sObj.author:'';
   meta.append(k,h,au);
 
@@ -802,21 +823,27 @@ function renderHero(){
   jump.onclick=()=>jumpTo(id);
   acts.append(fin,jump); meta.appendChild(acts);
 
-  if(rd.length>1){
-    const also=document.createElement('div'); also.className='also';
-    rd.slice(1).forEach(r=>{ const rid=idOf(r.s,r.b);
-      const row=document.createElement('div'); row.className='a';
-      row.innerHTML='<span>also reading</span><b></b>';
-      row.querySelector('b').textContent=r.b.title;
-      const mini=document.createElement('div'); mini.className='mini';
-      const f=document.createElement('button'); f.textContent='Finish'; f.onclick=()=>openFinishModal(rid);
-      const g=document.createElement('button'); g.textContent='Shelf'; g.onclick=()=>jumpTo(rid);
-      mini.append(f,g); row.appendChild(mini); also.appendChild(row); });
-    meta.appendChild(also);
-  }
-
   const flap=document.createElement('span'); flap.className='flap'; flap.textContent='Currently Reading';
-  art.append(flap,book,meta); heroEl.appendChild(art); renderUpNext();
+  art.append(flap,book,meta);
+  return art;
+}
+function renderHero(){
+  const rd=readingList();
+  heroEl.innerHTML='';
+  if(!rd.length){
+    const e=document.createElement('div'); e.className='empty-hero';
+    e.innerHTML='<div class="big">Nothing open right now</div><div class="sm">Tap a book\u2019s circle in the drawers to start reading \u2014 it lands here.</div>';
+    const btn=document.createElement('button'); btn.className='btn-ghost'; btn.textContent='Surprise me';
+    btn.onclick=surprise; e.appendChild(btn); heroEl.appendChild(e); renderUpNext(); return;
+  }
+  /* most recently started reading appears on top; books with no start date keep catalog order at the end */
+  const ordered=rd.slice().sort((a,b)=>{
+    const da=det(idOf(a.s,a.b)).started||'', db=det(idOf(b.s,b.b)).started||'';
+    if(da&&db) return db.localeCompare(da); return da?-1:db?1:0; });
+  const stack=document.createElement('div'); stack.className='herostack';
+  ordered.forEach(r=>stack.appendChild(buildHeroCard(r.s,r.b)));
+  heroEl.appendChild(stack);
+  renderUpNext();
 }
 
 /* ---------------- BUILD SHELVES ---------------- */
@@ -870,7 +897,7 @@ function buildSpine(s,b,idx,cards,secEntry,standalone){
   const spine=document.createElement('div'); spine.className='spine';
   decorateSpine(spine, s, b, id, standalone);
 
-  const grip=document.createElement('span'); grip.className='grip'; grip.innerHTML='\u2807'; grip.title='Drag to reorder';
+  const grip=document.createElement('span'); grip.className='grip'; grip.innerHTML='\u2807'; grip.title='Drag to reorder'; grip.setAttribute('aria-hidden','true');
   const seal=document.createElement('span'); seal.className='seal'; seal.setAttribute('aria-hidden','true');
   const num=document.createElement('span'); num.className='num'; num.textContent=b.num?b.num+'.':'';
   const ttl=document.createElement('span'); ttl.className='ttl'; ttl.textContent=b.title;
@@ -956,7 +983,7 @@ function buildSeriesSign(s,drawer){
     else { collapsed.add(s.series);
       if(sec){ sec.drawerEl.classList.add('collapsed'); render(); return; } }
     buildList(); render(); };
-  const grip=document.createElement('span'); grip.className='sgrip'; grip.innerHTML='\u2807'; grip.title='Drag to reorder series';
+  const grip=document.createElement('span'); grip.className='sgrip'; grip.innerHTML='\u2807'; grip.title='Drag to reorder series'; grip.setAttribute('aria-hidden','true');
   grip.addEventListener('mousedown',e=>{ e.stopPropagation(); sign.setAttribute('draggable','true'); });
   grip.addEventListener('click',e=>e.stopPropagation());
   sign.addEventListener('dragstart',e=>{ dragS={series:s.series}; drawer.classList.add('sdragging'); e.dataTransfer.effectAllowed='move'; try{e.dataTransfer.setData('text/plain',s.series);}catch(_){} });
@@ -1178,12 +1205,13 @@ function passes(id,hay){
   return true;
 }
 function render(){
-  let read=0,reading=0,total=0,shown=0;
+  let read=0,reading=0,unread=0,dnf=0,total=0,shown=0;
   sections.forEach(sec=>{
     let vis=0,sread=0;
     (sec.series.books||[]).forEach(b=>{
       const id=b.id, st=statusOf(id); total++;
       if(st==='read'){read++;sread++;} else if(st==='reading') reading++;
+      else if(st==='dnf') dnf++; else unread++;
       const r=rowMap.get(id);
       if(r){
         r.card.classList.remove('unread','reading','read','dnf'); r.card.classList.add(st);
@@ -1203,9 +1231,16 @@ function render(){
     if(sec.barEl) sec.barEl.style.width=(sec.total?Math.round(sread/sec.total*100):0)+'%';
     sec.drawerEl.style.display=vis?'':'none';
   });
+  document.querySelectorAll('.chips button').forEach(btn=>{
+    const key=btn.dataset.filter;
+    const n = key==='all'?total : key==='unread'?unread : key==='reading'?reading : key==='read'?read : dnf;
+    const base=btn.dataset.label || (btn.dataset.label=btn.textContent.replace(/\s*\(\d+\)$/,''));
+    btn.textContent=base+' ('+n+')';
+  });
   document.getElementById('cRead').textContent=read;
   document.getElementById('cReading').textContent=reading;
-  document.getElementById('cLeft').textContent=total-read-reading;
+  document.getElementById('cUnread').textContent=unread;
+  document.getElementById('cDnf').textContent=dnf;
   document.getElementById('cTotal').textContent=total;
   renderHero();
 
@@ -1508,6 +1543,44 @@ function computeStats(){
   st.total=st.read+st.reading+st.unread+st.dnf;
   return st;
 }
+/* a plain-language key for every icon and decorative mark in the app */
+function openLegend(){
+  const back=document.createElement('div'); back.className='modal-backdrop';
+  const m=document.createElement('div'); m.className='modal wide'; m.setAttribute('role','dialog'); m.setAttribute('aria-modal','true');
+  const h=document.createElement('h3'); h.textContent='What the symbols mean';
+  const sub=document.createElement('div'); sub.className='sub'; sub.textContent='A quick key to the marks on the shelves and in Controls.';
+  m.append(h,sub);
+
+  const rows=[
+    ['<span class="lg-seal" style="background:linear-gradient(180deg,var(--gold-hi),var(--gold-dim))"></span>','Gold bar \u2014 read'],
+    ['<span class="lg-seal" style="background:var(--ox)"></span>','Rust bar \u2014 currently reading'],
+    ['<span class="lg-seal" style="background:transparent;box-shadow:inset 0 0 0 1px rgba(240,230,205,.5)"></span>','Hollow bar \u2014 unread'],
+    ['<span class="lg-seal" style="background:#5c5148"></span>','Grey bar \u2014 set aside (DNF)'],
+    ['<span class="lg-ico">\u2605</span>','Stars on a spine show your rating \u2014 display only; change it from the book\u2019s detail card'],
+    ['<span class="lg-ico" style="font-size:15px">\u2726</span>','The small glyph at the top of a spine or cover is purely decorative \u2014 it\u2019s generated from the series name so every book in a set shares one'],
+    ['<span class="lg-ico">\u270E</span>','Pencil \u2014 rename or edit'],
+    ['<span class="lg-ico">\u2715</span>','Remove'],
+    ['<span class="lg-ico">\u2807</span>','Drag handle \u2014 appears on hover (desktop); reorder from the pencil-edit panel on mobile'],
+    ['<span class="lg-ico">\uD83C\uDFA7</span>','This book is marked as an audiobook'],
+  ];
+  const list=document.createElement('div'); list.className='legend-list';
+  rows.forEach(([ico,txt])=>{ const row=document.createElement('div'); row.className='legend-row';
+    const i=document.createElement('span'); i.className='legend-ic'; i.innerHTML=ico;
+    const t=document.createElement('span'); t.className='legend-tx'; t.textContent=txt;
+    row.append(i,t); list.appendChild(row); });
+  m.appendChild(list);
+
+  const act=document.createElement('div'); act.className='mact';
+  const close=document.createElement('button'); close.className='cancel'; close.textContent='Close';
+  act.appendChild(close); m.appendChild(act);
+  const shut=()=>{ back.remove(); document.removeEventListener('keydown',onkey); };
+  function onkey(e){ if(e.key==='Escape') shut(); }
+  document.addEventListener('keydown',onkey);
+  back.addEventListener('mousedown',e=>{ if(e.target===back) shut(); });
+  close.onclick=shut;
+  back.appendChild(m); document.body.appendChild(back); trapFocus(m);
+}
+
 function openStats(){
   const st=computeStats();
   const back=document.createElement('div'); back.className='modal-backdrop';
@@ -1687,7 +1760,23 @@ function progScore(id){ let n=0; if(ratings[id]!=null) n+=2;
   const d=details[id]; if(d&&(d.notes||d.finished||d.started||d.ptot||d.pcur||(d.reads&&d.reads.length))) n+=2;
   if(status[id]&&status[id]!=='unread') n+=1; return n; }
 function seriesScore(s){ return (s.books||[]).reduce((a,b)=>a+progScore(b.id),0); }
-function mergeDuplicates(){
+/* a button that arms on first tap (showing a warning) and only fires on the second,
+   used anywhere an action is safe to preview but risky to fire by accident */
+function makeConfirmBtn(label,warnText,fn,extraClass,disabled){
+  const b=document.createElement('button'); b.className='go'+(extraClass?' '+extraClass:''); b.textContent=label; b.disabled=!!disabled;
+  b.dataset.armed='0';
+  b.onclick=()=>{ if(b.dataset.armed==='1'){ b.dataset.armed='0'; b.classList.remove('armed'); b.textContent=label; fn(); return; }
+    b.dataset.armed='1'; b.textContent=warnText; b.classList.add('armed');
+    clearTimeout(b._t); b._t=setTimeout(()=>{ b.dataset.armed='0'; b.textContent=label; b.classList.remove('armed'); },4000); };
+  return b;
+}
+function countDuplicates(){
+  const groups=new Map();
+  catalog.series.forEach(s=>{ const k=normName(s.series); if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(s); });
+  let dupSeries=0; groups.forEach(l=>{ if(l.length>1) dupSeries+=l.length-1; });
+  return dupSeries;
+}
+function mergeDuplicatesNow(){
   const groups=new Map();
   catalog.series.forEach(s=>{ const k=normName(s.series); if(!groups.has(k)) groups.set(k,[]); groups.get(k).push(s); });
   let dupSeries=0; groups.forEach(l=>{ if(l.length>1) dupSeries+=l.length-1; });
@@ -1767,6 +1856,7 @@ document.getElementById('theme').onchange=e=>{ THEME=THEMES[e.target.value]?e.ta
   try{localStorage.setItem('rl.theme',THEME);}catch(_){} buildList(); render(); };
 document.getElementById('btnSurprise').onclick=surprise;
 document.getElementById('btnStats').onclick=openStats;
+document.getElementById('btnLegend').onclick=openLegend;
 document.getElementById('btnMd').onclick=exportMarkdown;
 document.getElementById('btnCsv').onclick=exportCSV;
 document.getElementById('btnImport').onclick=()=>document.getElementById('impfile').click();
@@ -1777,7 +1867,17 @@ document.getElementById('impfile').onchange=e=>{ const f=e.target.files[0]; if(!
     try{ if(isCsv) importCSV(txt); else importTxt(txt); }
     catch(err){ toast('Could not read that file.'); } };
   fr.readAsText(f); e.target.value=''; };
-document.getElementById('btnDedupe').onclick=()=>mergeDuplicates();
+(function(){
+  const b=document.getElementById('btnDedupe'); const label=b.textContent;
+  b.dataset.armed='0';
+  b.onclick=()=>{
+    if(b.dataset.armed==='1'){ b.dataset.armed='0'; b.classList.remove('armed'); b.textContent=label; mergeDuplicatesNow(); return; }
+    const n=countDuplicates();
+    if(!n){ toast('No duplicate series found.'); return; }
+    b.dataset.armed='1'; b.classList.add('armed'); b.textContent='Tap again: merge '+n+' duplicate'+(n>1?'s':'');
+    clearTimeout(b._t); b._t=setTimeout(()=>{ b.dataset.armed='0'; b.classList.remove('armed'); b.textContent=label; },4000);
+  };
+})();
 document.getElementById('btnCollapse').onclick=()=>{ const anyOpen=catalog.series.some(s=>s.series!=='Standalone' && !collapsed.has(s.series)); const btn=document.getElementById('btnCollapse');
   if(anyOpen){ catalog.series.forEach(s=>{ if(s.series!=='Standalone') collapsed.add(s.series); }); btn.textContent='Expand all'; } else { collapsed.clear(); btn.textContent='Collapse all'; }
   buildList(); render(); };
@@ -1865,6 +1965,25 @@ let pushTimer=null, syncing=false;
 const GIST_FILE='reading-desk.json';
 const GIST_PROG='reading-desk-progress.json';
 
+/* a stable per-browser id so each device can report its own sync history (#2) */
+const SK_DEVID='rl.sync.devid', SK_DEVNAME='rl.sync.devname';
+function guessDeviceName(){
+  const ua=navigator.userAgent||''; const plat=navigator.platform||'';
+  let os = /iPhone|iPad|iPod/.test(ua)?'iPhone/iPad' : /Android/.test(ua)?'Android' :
+    /Mac/.test(plat)?'Mac' : /Win/.test(plat)?'Windows' : /Linux/.test(plat)?'Linux' : 'this device';
+  let browser = /Edg\//.test(ua)?'Edge' : /OPR\//.test(ua)?'Opera' : /Chrome\//.test(ua)?'Chrome' :
+    /Firefox\//.test(ua)?'Firefox' : /Safari\//.test(ua)?'Safari' : 'Browser';
+  return browser+' on '+os;
+}
+let DEV_ID=localStorage.getItem(SK_DEVID)||'';
+if(!DEV_ID){ DEV_ID='d_'+Date.now().toString(36)+Math.random().toString(36).slice(2,9); try{localStorage.setItem(SK_DEVID,DEV_ID);}catch(e){} }
+let devName=localStorage.getItem(SK_DEVNAME)||guessDeviceName();
+function setDevName(n){ n=(n||'').trim()||guessDeviceName(); devName=n; try{localStorage.setItem(SK_DEVNAME,devName);}catch(e){}
+  stampDevice(); sMeta(); refreshSyncPanel();
+  if(syncToken) pushNow(true).then(refreshSyncPanel).catch(e=>{ setSyncMsg(friendlyError(e)); refreshSyncPanel(); }); }
+/* record that THIS device just synced, so every device can see everyone's history */
+function stampDevice(){ meta.devices=meta.devices||{}; meta.devices[DEV_ID]={name:devName,lastSyncAt:Date.now()}; }
+
 function hasAnyBooks(){ return catalog.series.some(s=>s.books.length>0); }
 // mark pre-existing local data as "fresh" so it isn't overwritten by an older/empty cloud copy
 if(!dataUpdatedAt && hasAnyBooks()){ dataUpdatedAt=Date.now(); try{localStorage.setItem(K_UPD,String(dataUpdatedAt));}catch(e){} }
@@ -1940,7 +2059,12 @@ function mergeRemote(R){
   const t={}, del={};
   [...new Set([...Object.keys(meta.t||{}),...Object.keys(rm.t||{})])].forEach(k=>{ const v=Math.max(LT(k),RT(k)); if(v) t[k]=v; });
   [...new Set([...Object.keys(meta.del||{}),...Object.keys(rm.del||{})])].forEach(k=>{ const v=Math.max(LD(k),RD(k)); if(v) del[k]=v; });
-  meta={t,del};
+  const devices={};
+  const rDevs=(rm.devices)||{}, lDevs=meta.devices||{};
+  [...new Set([...Object.keys(lDevs),...Object.keys(rDevs)])].forEach(k=>{
+    const a=lDevs[k], b=rDevs[k];
+    devices[k] = (!a) ? b : (!b) ? a : ((+b.lastSyncAt||0) > (+a.lastSyncAt||0) ? b : a); });
+  meta={t,del,devices};
 
   /* keep only ids that still exist, so the maps don't grow forever */
   const live=new Set(); catalog.series.forEach(s=>s.books.forEach(b=>live.add(b.id)));
@@ -1956,6 +2080,18 @@ function mergeRemote(R){
   return {mode:'merged'};
 }
 
+/* translate a thrown error into something a person can actually act on \u2014
+   never surface a raw JS exception or bare status code */
+function friendlyError(e){
+  const msg=String((e&&e.message)||e||'');
+  if(/Failed to fetch|NetworkError|network/i.test(msg)) return 'Can\u2019t reach GitHub right now. Check your connection and try again.';
+  const m=msg.match(/(\d{3})\s*$/); const code=m?+m[1]:0;
+  if(code===401) return 'That token isn\u2019t valid anymore. Reconnect with a fresh one from github.com/settings/tokens.';
+  if(code===403) return 'GitHub turned that down \u2014 either the token is missing the \u201cgist\u201d scope, or too many requests went out. Wait a bit and try again.';
+  if(code===404) return 'The cloud copy couldn\u2019t be found. It may have been deleted \u2014 try \u201cReconnect to shared copy\u201d below.';
+  if(code>=500) return 'GitHub\u2019s servers are having trouble right now. Try again shortly.';
+  return 'Something went wrong talking to GitHub. Try again, and if it keeps happening, disconnect and reconnect.';
+}
 function ghFetch(url,opts){ opts=opts||{}; return fetch(url,Object.assign({},opts,{headers:Object.assign(
   {'Authorization':'Bearer '+syncToken,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}, opts.headers||{})})); }
 function gistSize(g){ let n=0; [GIST_FILE,GIST_PROG].forEach(f=>{ if(g.files&&g.files[f]) n+=g.files[f].size||0; }); return n; }
@@ -1970,25 +2106,35 @@ async function findGist(){ const r=await ghFetch('https://api.github.com/gists?p
 /* the library and your progress live in separate files, so a star rating
    doesn't re-upload the whole catalog */
 let lastSent={cat:'',prog:''};
-function changedFiles(){
+/* only bump this device's sync-history entry when it's actually due (or forced by an
+   explicit user action) \u2014 otherwise a routine foreground check would force a full
+   catalog re-upload every time, defeating the "don't re-upload for nothing" design */
+const DEVICE_STAMP_GAP=15*60*1000;
+function stampDeviceIfDue(force){
+  const rec=(meta.devices||{})[DEV_ID];
+  const due = force || !rec || (Date.now()-(+rec.lastSyncAt||0))>DEVICE_STAMP_GAP;
+  if(due){ stampDevice(); sMeta(); }
+}
+function changedFiles(force){
+  stampDeviceIfDue(force);
   const cat=JSON.stringify(syncPayload()), prog=JSON.stringify(progressPayload());
   const files={};
   if(cat!==lastSent.cat) files[GIST_FILE]={content:cat};
   if(prog!==lastSent.prog) files[GIST_PROG]={content:prog};
   return {files, cat, prog};
 }
-async function createGist(){ const {files,cat,prog}=changedFiles();
+async function createGist(force){ const {files,cat,prog}=changedFiles(force);
   const body={description:'The Reading Desk data \u2014 synced automatically, do not edit by hand',public:false,
     files:{[GIST_FILE]:{content:JSON.stringify(syncPayload())},[GIST_PROG]:{content:JSON.stringify(progressPayload())}}};
   const r=await ghFetch('https://api.github.com/gists',{method:'POST',body:JSON.stringify(body)});
   if(!r.ok) throw new Error('create '+r.status); const j=await r.json();
   gistId=j.id; localStorage.setItem(SK_GIST,gistId); lastSent={cat:JSON.stringify(syncPayload()),prog:JSON.stringify(progressPayload())};
   clearDirty(); return j; }
-async function pushNow(){ if(!syncToken) return; if(!gistId){ await createGist(); markSynced(); return; }
-  const {files,cat,prog}=changedFiles();
+async function pushNow(force){ if(!syncToken) return; if(!gistId){ await createGist(force); markSynced(); return; }
+  const {files,cat,prog}=changedFiles(force);
   if(!Object.keys(files).length){ clearDirty(); markSynced(); return; }
   const r=await ghFetch('https://api.github.com/gists/'+gistId,{method:'PATCH',body:JSON.stringify({files})});
-  if(r.status===404){ gistId=''; localStorage.removeItem(SK_GIST); lastSent={cat:'',prog:''}; await createGist(); markSynced(); return; }
+  if(r.status===404){ gistId=''; localStorage.removeItem(SK_GIST); lastSent={cat:'',prog:''}; await createGist(force); markSynced(); return; }
   if(!r.ok) throw new Error('push '+r.status);
   lastSent={cat,prog}; clearDirty(); markSynced(); }
 async function readGistFile(j,name){ const f=j.files&&j.files[name]; if(!f) return null;
@@ -2009,27 +2155,30 @@ let dirty=false;
 function markDirty(){ if(!syncToken) return; dirty=true; updateSyncBtn(); }
 function clearDirty(){ dirty=false; updateSyncBtn(); }
 
-function schedulePush(){ if(!syncToken) return; clearTimeout(pushTimer); pushTimer=setTimeout(()=>{ pushNow().then(refreshSyncPanel).catch(e=>{ setSyncMsg('Sync error: '+e.message); refreshSyncPanel(); }); }, 2500); }
+function schedulePush(){ if(!syncToken) return; clearTimeout(pushTimer); pushTimer=setTimeout(()=>{ pushNow().then(refreshSyncPanel).catch(e=>{ setSyncMsg(friendlyError(e)); refreshSyncPanel(); }); }, 2500); }
 
 async function syncNow(manual){
   if(!syncToken){ setSyncMsg('Add a token to connect.'); refreshSyncPanel(); return; }
   if(syncing) return; syncing=true; setSyncMsg('Syncing\u2026'); refreshSyncPanel();
   try{
     if(!gistId){ const found=await findGist(); if(found){ gistId=found; localStorage.setItem(SK_GIST,gistId); } }
-    if(!gistId){ await createGist(); markSynced(); setSyncMsg('Connected \u00b7 cloud copy created'); }
+    if(!gistId){ await createGist(manual); markSynced(); setSyncMsg('Connected \u00b7 cloud copy created'); }
     else {
       const remote=await pullRemote();
-      if(!remote){ await pushNow(); setSyncMsg('Connected \u00b7 pushed your library up'); }
+      if(!remote){ await pushNow(manual); setSyncMsg('Connected \u00b7 pushed your library up'); }
       else{ const rt=+remote.updatedAt||0;
         const res=mergeRemote(remote);
-        if(res.mode==='replaced'){ markSynced(); setSyncMsg('Updated from the cloud'); await pushNow(); }
-        else { await pushNow(); markSynced();
+        if(res.mode==='replaced'){ markSynced(); setSyncMsg('Updated from the cloud'); await pushNow(manual); }
+        else { await pushNow(manual); markSynced();
           setSyncMsg(rt>lastSyncAt?'Merged changes from your other devices':'Up to date'); } }
     }
-  }catch(e){ setSyncMsg('Sync error: '+(e.message||e)); if(manual) toast('Sync failed: '+(e.message||e)); }
+  }catch(e){ setSyncMsg(friendlyError(e)); if(manual) toast(friendlyError(e)); }
   syncing=false; refreshSyncPanel(); updateSyncBtn();
 }
 function connectToken(tok){ tok=(tok||'').trim(); if(!tok){ setSyncMsg('Paste a token first.'); return; }
+  if(!/^(ghp_|github_pat_)/.test(tok)){
+    toast('That doesn\u2019t look like a GitHub token \u2014 classic tokens start with \u201cghp_\u201d. Double-check you copied the whole thing.');
+  }
   syncToken=tok; localStorage.setItem(SK_TOKEN,syncToken); gistId=localStorage.getItem(SK_GIST)||''; syncNow(true); }
 function disconnectSync(){ syncToken=''; localStorage.removeItem(SK_TOKEN); localStorage.removeItem(SK_GIST); gistId='';
   setSyncMsg(''); updateSyncBtn(); refreshSyncPanel(); toast('Sync disconnected on this device. Your books stay here.'); }
@@ -2060,14 +2209,14 @@ async function forceFullSync(){
   if(syncing) return; syncing=true; setSyncMsg('Full sync\u2026'); refreshSyncPanel(); updateSyncBtn();
   try{
     if(!gistId){ const f=await findGist(); if(f){ gistId=f; localStorage.setItem(SK_GIST,gistId); } }
-    if(!gistId){ await createGist(); markSynced(); setSyncMsg('Connected \u00b7 cloud copy created'); }
+    if(!gistId){ await createGist(true); markSynced(); setSyncMsg('Connected \u00b7 cloud copy created'); }
     else{
       const remote=await pullRemote();
       if(remote) mergeRemote(remote);
       lastSent={cat:'',prog:''};              /* force a full re-upload of both files */
-      await pushNow(); markSynced(); setSyncMsg('Full sync complete \u2014 both devices reconciled');
+      await pushNow(true); markSynced(); setSyncMsg('Full sync complete \u2014 both devices reconciled');
     }
-  }catch(e){ setSyncMsg('Sync error: '+(e.message||e)); toast('Full sync failed: '+(e.message||e)); }
+  }catch(e){ setSyncMsg(friendlyError(e)); toast(friendlyError(e)); }
   syncing=false; refreshSyncPanel(); updateSyncBtn();
 }
 /* make the cloud exactly match THIS device (this device wins everywhere) */
@@ -2079,9 +2228,9 @@ async function pushOverwrite(){
     meta.t['__order']=now; sMeta();
     if(!gistId){ const f=await findGist(); if(f){ gistId=f; localStorage.setItem(SK_GIST,gistId); } }
     lastSent={cat:'',prog:''};
-    if(!gistId) await createGist(); else await pushNow();
+    if(!gistId) await createGist(true); else await pushNow(true);
     markSynced(); setSyncMsg('Cloud now matches this device'); toast('Pushed this device to the cloud.');
-  }catch(e){ setSyncMsg('Sync error: '+(e.message||e)); toast('Push failed: '+(e.message||e)); }
+  }catch(e){ setSyncMsg(friendlyError(e)); toast(friendlyError(e)); }
   syncing=false; refreshSyncPanel(); updateSyncBtn();
 }
 /* make THIS device exactly match the cloud (cloud wins here) */
@@ -2097,7 +2246,7 @@ async function pullOverwrite(){
       lastSent={cat:JSON.stringify(syncPayload()),prog:JSON.stringify(progressPayload())};
       markSynced(); setSyncMsg('This device now matches the cloud'); toast('Replaced this device with the cloud copy.');
     }
-  }catch(e){ setSyncMsg('Sync error: '+(e.message||e)); toast('Pull failed: '+(e.message||e)); }
+  }catch(e){ setSyncMsg(friendlyError(e)); toast(friendlyError(e)); }
   syncing=false; refreshSyncPanel(); updateSyncBtn();
 }
 
@@ -2118,8 +2267,9 @@ function buildSyncPanel(){
   const h=document.createElement('h3'); h.textContent='Sync across devices'; g.appendChild(h);
   if(!syncToken){
     const hint=document.createElement('span'); hint.className='hint';
-    hint.innerHTML='Paste a GitHub token to keep this library the same on every device. It is stored only in this browser. '+
-      'Create a <b>classic</b> token with just the <b>gist</b> scope at github.com/settings/tokens.';
+    hint.innerHTML='Paste a GitHub token to keep this library the same on every device. It\u2019s stored only in this browser\u2019s local storage \u2014 never uploaded anywhere except to authenticate with GitHub, and never included in backups or exports. '+
+      'Create a <b>classic</b> token with only the <b>gist</b> scope checked at <a href="https://github.com/settings/tokens" target="_blank" rel="noopener" style="color:var(--gold-hi);text-decoration:underline">github.com/settings/tokens</a>. '+
+      'You can revoke it there any time \u2014 or use Disconnect below, which removes it from this device immediately.';
     const row=document.createElement('div'); row.className='addrow';
     const inp=document.createElement('input'); inp.type='password'; inp.id='syncTok'; inp.placeholder='GitHub token (gist scope)'; inp.setAttribute('aria-label','GitHub token');
     inp.style.flex='1 1 220px';
@@ -2138,6 +2288,26 @@ function buildSyncPanel(){
       idline.innerHTML='Cloud copy ID: <b>'+gistId+'</b> \u2014 <a href="https://gist.github.com/'+gistId+'" target="_blank" rel="noopener" style="color:var(--gold-hi);text-decoration:underline">view</a>';
       g.appendChild(idline); }
 
+    /* --- Devices: see when each of your devices last synced, so a stuck one is obvious --- */
+    const devs=document.createElement('div'); devs.className='syncfix';
+    const dh=document.createElement('div'); dh.className='hint'; dh.style.marginTop='4px'; dh.innerHTML='<b>Devices</b>';
+    devs.appendChild(dh);
+    const known=Object.entries(meta.devices||{}).sort((a,b)=>(+b[1].lastSyncAt||0)-(+a[1].lastSyncAt||0));
+    if(known.length){ const list=document.createElement('div'); list.className='devlist';
+      known.forEach(([devId,rec])=>{ const row=document.createElement('div'); row.className='devrow'+(devId===DEV_ID?' me':'');
+        const nm=document.createElement('span'); nm.className='devnm'; nm.textContent=rec.name+(devId===DEV_ID?' (this device)':'');
+        const tm=document.createElement('span'); tm.className='devtm'; tm.textContent=relTime(+rec.lastSyncAt||0);
+        row.append(nm,tm); list.appendChild(row); });
+      devs.appendChild(list);
+    }
+    const nrow=document.createElement('div'); nrow.className='addrow';
+    const nin=document.createElement('input'); nin.value=devName; nin.placeholder='Name for this device'; nin.setAttribute('aria-label','Name for this device'); nin.style.flex='1 1 180px';
+    const nbtn=document.createElement('button'); nbtn.className='go'; nbtn.textContent='Rename this device';
+    nbtn.onclick=()=>setDevName(nin.value);
+    nin.addEventListener('keydown',e=>{ if(e.key==='Enter') nbtn.click(); });
+    nrow.append(nin,nbtn); devs.appendChild(nrow);
+    g.appendChild(devs);
+
     /* --- Fix a mismatch: force operations for when devices drift --- */
     const fix=document.createElement('div'); fix.className='syncfix';
     const fh=document.createElement('div'); fh.className='hint'; fh.style.marginTop='4px';
@@ -2149,14 +2319,8 @@ function buildSyncPanel(){
     frow.appendChild(full); fix.appendChild(frow);
 
     const drow=document.createElement('div'); drow.className='addrow';
-    const confirmBtn=(label,warn,fn)=>{ const b=document.createElement('button'); b.className='go danger'; b.textContent=label; b.disabled=syncing;
-      b.dataset.armed='0';
-      b.onclick=()=>{ if(b.dataset.armed==='1'){ fn(); return; }
-        b.dataset.armed='1'; b.textContent=warn; b.classList.add('armed');
-        clearTimeout(b._t); b._t=setTimeout(()=>{ b.dataset.armed='0'; b.textContent=label; b.classList.remove('armed'); },4000); };
-      return b; };
-    drow.appendChild(confirmBtn('Cloud \u2190 this device','Tap again: overwrite cloud',pushOverwrite));
-    drow.appendChild(confirmBtn('This device \u2190 cloud','Tap again: overwrite this device',pullOverwrite));
+    drow.appendChild(makeConfirmBtn('Cloud \u2190 this device','Tap again: overwrite cloud',pushOverwrite,'danger',syncing));
+    drow.appendChild(makeConfirmBtn('This device \u2190 cloud','Tap again: overwrite this device',pullOverwrite,'danger',syncing));
     fix.appendChild(drow);
     const fn2=document.createElement('div'); fn2.className='hint'; fn2.style.opacity='.75';
     fn2.textContent='Full sync is safe. The two replace options overwrite one side entirely \u2014 save a backup first.';
