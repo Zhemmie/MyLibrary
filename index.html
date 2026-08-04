@@ -449,7 +449,7 @@
   </header>
 
   <div class="cabinet">
-    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v25</div>
+    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v26</div>
     <div class="hero" id="hero"></div>
 
     <input type="search" id="q" class="search" placeholder="Search title or author" aria-label="Search titles and authors">
@@ -1958,8 +1958,15 @@ function mergeRemote(R){
 
 function ghFetch(url,opts){ opts=opts||{}; return fetch(url,Object.assign({},opts,{headers:Object.assign(
   {'Authorization':'Bearer '+syncToken,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}, opts.headers||{})})); }
+function gistSize(g){ let n=0; [GIST_FILE,GIST_PROG].forEach(f=>{ if(g.files&&g.files[f]) n+=g.files[f].size||0; }); return n; }
 async function findGist(){ const r=await ghFetch('https://api.github.com/gists?per_page=100'); if(!r.ok) return null;
-  const arr=await r.json(); const g=Array.isArray(arr)?arr.find(x=>x.files&&x.files[GIST_FILE]):null; return g?g.id:null; }
+  const arr=await r.json(); if(!Array.isArray(arr)) return null;
+  const cands=arr.filter(x=>x.files&&x.files[GIST_FILE]);
+  if(!cands.length) return null;
+  /* if more than one gist holds our file (a split from an earlier bug), always pick the
+     same one on every device: the richest copy, tie-broken by id, so devices converge */
+  cands.sort((a,b)=> gistSize(b)-gistSize(a) || String(a.id).localeCompare(String(b.id)));
+  return cands[0].id; }
 /* the library and your progress live in separate files, so a star rating
    doesn't re-upload the whole catalog */
 let lastSent={cat:'',prog:''};
@@ -2026,6 +2033,25 @@ function connectToken(tok){ tok=(tok||'').trim(); if(!tok){ setSyncMsg('Paste a 
   syncToken=tok; localStorage.setItem(SK_TOKEN,syncToken); gistId=localStorage.getItem(SK_GIST)||''; syncNow(true); }
 function disconnectSync(){ syncToken=''; localStorage.removeItem(SK_TOKEN); localStorage.removeItem(SK_GIST); gistId='';
   setSyncMsg(''); updateSyncBtn(); refreshSyncPanel(); toast('Sync disconnected on this device. Your books stay here.'); }
+
+/* rebind this device to the shared cloud copy, then pull it down. Fixes a device that
+   latched onto a different (duplicate) gist and can't converge. */
+async function reconnectSharedGist(){
+  if(!syncToken){ setSyncMsg('Add a token to connect.'); refreshSyncPanel(); return; }
+  if(syncing) return; syncing=true; setSyncMsg('Finding the shared cloud copy\u2026'); refreshSyncPanel(); updateSyncBtn();
+  let found=null; try{ found=await findGist(); }catch(e){}
+  syncing=false;
+  if(!found){ setSyncMsg('No cloud copy found for this token'); toast('No cloud copy found. Check the token matches your other devices.'); refreshSyncPanel(); updateSyncBtn(); return; }
+  if(found===gistId){ setSyncMsg('Already on the shared copy \u2014 pulling latest'); }
+  gistId=found; localStorage.setItem(SK_GIST,gistId); lastSent={cat:'',prog:''};
+  await pullOverwrite();
+}
+/* bind to a cloud-copy id the user pasted from a good device, then pull it down */
+async function useSpecificGist(id){ id=(id||'').trim().replace(/^.*gist\.github\.com\//,'').replace(/[^a-z0-9].*$/i,'');
+  if(!id){ toast('Paste the cloud copy ID from a working device first.'); return; }
+  gistId=id; localStorage.setItem(SK_GIST,gistId); lastSent={cat:'',prog:''};
+  await pullOverwrite();
+}
 
 /* full two-way sync: pull + merge everything, then re-upload the entire payload
    (bypasses the "only send what changed" optimisation). Non-destructive union. */
@@ -2108,8 +2134,9 @@ function buildSyncPanel(){
     const b1=document.createElement('button'); b1.className='go'; b1.textContent=syncing?'Syncing\u2026':'Sync now'; b1.disabled=syncing; b1.onclick=()=>syncNow(true);
     const b2=document.createElement('button'); b2.className='go'; b2.style.background='transparent'; b2.style.color='var(--gold-hi)'; b2.textContent='Disconnect'; b2.onclick=disconnectSync;
     row.append(b1,b2); g.append(status,row);
-    if(gistId){ const link=document.createElement('a'); link.href='https://gist.github.com/'+gistId; link.target='_blank'; link.rel='noopener';
-      link.className='hint'; link.style.color='var(--gold-hi)'; link.style.textDecoration='underline'; link.textContent='View the cloud copy'; g.appendChild(link); }
+    if(gistId){ const idline=document.createElement('div'); idline.className='hint'; idline.style.wordBreak='break-all';
+      idline.innerHTML='Cloud copy ID: <b>'+gistId+'</b> \u2014 <a href="https://gist.github.com/'+gistId+'" target="_blank" rel="noopener" style="color:var(--gold-hi);text-decoration:underline">view</a>';
+      g.appendChild(idline); }
 
     /* --- Fix a mismatch: force operations for when devices drift --- */
     const fix=document.createElement('div'); fix.className='syncfix';
@@ -2134,7 +2161,25 @@ function buildSyncPanel(){
     const fn2=document.createElement('div'); fn2.className='hint'; fn2.style.opacity='.75';
     fn2.textContent='Full sync is safe. The two replace options overwrite one side entirely \u2014 save a backup first.';
     fix.appendChild(fn2);
-    g.appendChild(fix);
+
+    /* --- Wrong cloud copy: a device stuck on a different gist can rebind here --- */
+    const rec=document.createElement('div'); rec.className='syncfix';
+    const rh=document.createElement('div'); rh.className='hint'; rh.style.marginTop='4px';
+    rh.innerHTML='<b>A device won\u2019t catch up?</b> It may be on a different cloud copy. Rejoin the shared one:';
+    rec.appendChild(rh);
+    const rrow=document.createElement('div'); rrow.className='addrow';
+    const recon=document.createElement('button'); recon.className='go'; recon.textContent=syncing?'Working\u2026':'Reconnect to shared copy'; recon.disabled=syncing;
+    recon.title='Find the shared cloud copy for this token and pull it onto this device'; recon.onclick=()=>reconnectSharedGist();
+    rrow.appendChild(recon); rec.appendChild(rrow);
+    const idrow=document.createElement('div'); idrow.className='addrow';
+    const idin=document.createElement('input'); idin.placeholder='\u2026or paste the Cloud copy ID from a good device'; idin.setAttribute('aria-label','Cloud copy ID');
+    idin.style.flex='1 1 200px';
+    const idbtn=document.createElement('button'); idbtn.className='go'; idbtn.textContent='Use it'; idbtn.disabled=syncing;
+    idbtn.onclick=()=>useSpecificGist(idin.value);
+    idin.addEventListener('keydown',e=>{ if(e.key==='Enter') idbtn.click(); });
+    idrow.append(idin,idbtn); rec.appendChild(idrow);
+    fix.appendChild(document.createElement('div'));
+    g.appendChild(fix); g.appendChild(rec);
   }
   syncPanel.appendChild(g);
 }
