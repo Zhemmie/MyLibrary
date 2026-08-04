@@ -196,7 +196,7 @@
   .brass .sgrip{margin-left:2px;font-size:12px;color:#5c4a1e;cursor:grab;opacity:0;transition:opacity .15s;user-select:none}
   .brass:hover .sgrip,.sgrip:focus-visible{opacity:1}
   .brass .sgrip:active{cursor:grabbing}
-  .brass{position:relative;display:grid;grid-template-columns:auto auto minmax(80px,max-content) minmax(0,1fr) auto auto auto;
+  .brass{position:relative;display:grid;grid-template-columns:auto auto minmax(80px,max-content) minmax(0,1fr) auto auto;
     column-gap:12px;align-items:center;padding:11px 20px;border-radius:4px;z-index:3;
     background:linear-gradient(180deg,#eadaa0 0%, #d3b25e 20%, #b9922c 52%, #a5811f 70%, #d8bf78 100%);
     box-shadow:0 6px 16px -8px rgba(60,40,10,.6), inset 0 1px 0 #fff8, inset 0 -2px 3px #7a5c1466;
@@ -208,19 +208,31 @@
   /* recessed cream paper label, like the card-catalog holder */
   .brass h3{font-family:var(--type);font-weight:400;font-size:16px;line-height:1.15;margin:0;letter-spacing:.01em;color:#2c2113;
     background:linear-gradient(180deg,#f7efd8,#e8dab7);padding:5px 14px;border-radius:2px;white-space:nowrap;
+    min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;
     box-shadow:inset 0 1px 3px rgba(80,55,20,.4), inset 0 -1px 0 #fff9, 0 1px 0 #fff5, 0 0 0 1px #7a5c14;}
   .brass .auth{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#3a2c0e;
     min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .brass .tally{font-family:var(--mono);font-size:12px;color:#3a2c0e;white-space:nowrap;justify-self:end}
   .brass .tally b{color:#2e2409}
+  .brass .sicons{display:flex;align-items:center;justify-self:end}
   .brass .sbtn{background:none;border:0;color:#4a3a12;cursor:pointer;padding:3px 6px;font-size:12px;opacity:0;transition:opacity .15s,color .15s}
   .brass:hover .sbtn,.sbtn:focus-visible{opacity:1}
   .brass .sbtn:hover{color:#2e2409}
   .sprog{position:absolute;left:0;right:0;bottom:0;height:5px;background:#5a430e33;border-radius:0 0 4px 4px;overflow:hidden}
   .sprog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#4a3708,#20180a);box-shadow:inset 0 1px 0 rgba(255,255,255,.15);transition:width .4s ease}
+  /* mobile: two rows, so a long title gets full width instead of squeezing the count/icons */
   @media (max-width:640px){
-    .brass{grid-template-columns:auto auto minmax(0,1fr) auto auto auto;column-gap:8px;padding:10px 14px}
-    .brass .auth{display:none}
+    .brass{
+      grid-template-columns:auto auto minmax(0,1fr) auto auto;
+      grid-template-areas:"grip caret title title title" "grip caret auth  tally icons";
+      row-gap:7px; column-gap:8px; padding:10px 14px 12px; align-items:center}
+    .brass::before,.brass::after{display:none}
+    .brass .sgrip{grid-area:grip}
+    .brass .caret{grid-area:caret}
+    .brass h3{grid-area:title; white-space:normal; overflow:visible; text-overflow:clip; max-width:none}
+    .brass .auth{grid-area:auth; display:block}
+    .brass .tally{grid-area:tally}
+    .brass .sicons{grid-area:icons}
   }
 
   .cards{background:linear-gradient(180deg,var(--drawer-a),var(--drawer-b));border:1px solid #2c1c0f;border-top:0;
@@ -464,7 +476,7 @@
   </header>
 
   <div class="cabinet">
-    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v29</div>
+    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v30</div>
     <div class="hero" id="hero"></div>
 
     <input type="search" id="q" class="search" placeholder="Search title or author" aria-label="Search titles and authors">
@@ -1002,7 +1014,8 @@ function buildSeriesSign(s,drawer){
   const db=document.createElement('button'); db.className='sbtn'; db.innerHTML='\u2715'; db.title='Remove series';
   db.setAttribute('aria-label','Remove series '+s.series);
   db.onclick=(e)=>{ e.stopPropagation(); removeSeries(s.series); };
-  sign.append(eb,db); drawer.appendChild(sign);
+  const sicons=document.createElement('span'); sicons.className='sicons'; sicons.append(eb,db);
+  sign.appendChild(sicons); drawer.appendChild(sign);
 }
 
 function buildList(){
