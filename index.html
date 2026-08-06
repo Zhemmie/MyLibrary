@@ -90,6 +90,8 @@
   .fmeta h2{font-family:var(--disp);font-weight:600;font-size:clamp(28px,4.6vw,40px);line-height:1.02;margin:6px 0 6px;color:var(--brown-2)}
   .fmeta .auth{font-style:italic;font-size:17px;color:var(--ink-soft)}
   .prog{margin-top:18px}
+  .prog .pgpct{text-align:right;font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.03em;
+    color:var(--gold);margin-bottom:5px}
   .prog .bar{height:8px;background:#d7c7a2;border-radius:5px;overflow:hidden;box-shadow:inset 0 1px 2px #0002}
   .prog .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold-mid));transition:width .4s ease}
   .prog .lbl{display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:7px}
@@ -476,7 +478,7 @@
   </header>
 
   <div class="cabinet">
-    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v30</div>
+    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v31</div>
     <div class="hero" id="hero"></div>
 
     <input type="search" id="q" class="search" placeholder="Search title or author" aria-label="Search titles and authors">
@@ -806,7 +808,11 @@ function buildHeroCard(sName,b){
 
   const prog=document.createElement('div'); prog.className='prog';
   const ptot=+d.ptot||0, pcur=+d.pcur||0;
-  if(ptot>0){ const bar=document.createElement('div'); bar.className='bar';
+  if(ptot>0){
+    const pct=document.createElement('div'); pct.className='pgpct';
+    pct.textContent=Math.round(Math.max(0,Math.min(100,pcur/ptot*100)))+'%';
+    prog.appendChild(pct);
+    const bar=document.createElement('div'); bar.className='bar';
     const fill=document.createElement('i'); fill.style.width=Math.max(0,Math.min(100,pcur/ptot*100))+'%'; bar.appendChild(fill); prog.appendChild(bar); }
   const lbl=document.createElement('div'); lbl.className='lbl';
   const unit=(d.fmt==='audio')?'chapter':'page';
@@ -848,10 +854,14 @@ function renderHero(){
     const btn=document.createElement('button'); btn.className='btn-ghost'; btn.textContent='Surprise me';
     btn.onclick=surprise; e.appendChild(btn); heroEl.appendChild(e); renderUpNext(); return;
   }
-  /* most recently started reading appears on top; books with no start date keep catalog order at the end */
+  /* the book you most recently updated a page/chapter number for sits on top \u2014
+     that's the strongest signal for "actively reading this one right now" */
   const ordered=rd.slice().sort((a,b)=>{
-    const da=det(idOf(a.s,a.b)).started||'', db=det(idOf(b.s,b.b)).started||'';
-    if(da&&db) return db.localeCompare(da); return da?-1:db?1:0; });
+    const da=det(idOf(a.s,a.b)), db=det(idOf(b.s,b.b));
+    const pa=+da.pcurAt||0, pb=+db.pcurAt||0;
+    if(pa||pb) return pb-pa;
+    const sa=da.started||'', sb=db.started||'';
+    if(sa&&sb) return sb.localeCompare(sa); return sa?-1:sb?1:0; });
   const stack=document.createElement('div'); stack.className='herostack';
   ordered.forEach(r=>stack.appendChild(buildHeroCard(r.s,r.b)));
   heroEl.appendChild(stack);
@@ -1674,7 +1684,9 @@ function offerNextInSeries(id){
 function setRating(id,i){ if(ratings[id]===i) delete ratings[id]; else ratings[id]=i; touch(id); sRt(); render(); }
 function setPages(id,which,val){ const d=det(id);
   const v=(val===''||val==null)?undefined:Math.max(0,parseInt(val,10)||0);
-  if(v===undefined) delete d[which]; else d[which]=v; touch(id); sDet();
+  if(v===undefined) delete d[which]; else d[which]=v;
+  if(which==='pcur'){ if(v===undefined) delete d.pcurAt; else d.pcurAt=Date.now(); }
+  touch(id); sDet();
   const card=document.querySelector('.card[data-id="'+String(id).replace(/"/g,'\\"')+'"] .detail');
   if(card){ const pg=card.querySelectorAll('input.pg'); if(pg.length===2){ pg[0].value=d.pcur||''; pg[1].value=d.ptot||''; } }
   renderHero(); }
