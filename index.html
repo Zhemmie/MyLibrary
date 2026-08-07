@@ -174,6 +174,25 @@
     border:1px solid #1a1109;
     box-shadow:0 26px 60px -28px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,220,160,.12), inset 0 -3px 10px rgba(0,0,0,.45)}
   .cabinet .hero{margin:0}
+  .modeflash{position:fixed;inset:0;z-index:9999;pointer-events:none;opacity:0}
+  .modeflash.boot-in{animation:bootin .55s ease-out}
+  .modeflash.boot-out{animation:bootout .35s ease-out}
+  @keyframes bootin{
+    0%{opacity:0;background:#04060a}
+    6%{opacity:1;background:#bdf6ff}
+    12%{opacity:0}
+    18%{opacity:.7;background:#2de7ff}
+    26%{opacity:0}
+    34%{opacity:.3;background:#04060a}
+    40%{opacity:0}
+    100%{opacity:0}
+  }
+  .modeflash.boot-in::after{content:"";position:absolute;left:0;right:0;top:-4%;height:6%;
+    background:linear-gradient(180deg,transparent,rgba(45,231,255,.55),transparent);
+    animation:bootscan .55s ease-out}
+  @keyframes bootscan{0%{top:-6%}100%{top:100%}}
+  @keyframes bootout{0%{opacity:0}30%{opacity:.5;background:#241a10}100%{opacity:0}}
+  @media (prefers-reduced-motion:reduce){ .modeflash.boot-in,.modeflash.boot-out,.modeflash.boot-in::after{animation:none} }
   body[data-mode="night"] .cabinet{
     background:
       repeating-linear-gradient(0deg, rgba(45,231,255,.03) 0 1px, transparent 1px 3px),
@@ -434,7 +453,7 @@
     opacity:var(--spshine,0);animation:spscan 2.6s linear infinite}
   @keyframes spscan{0%{top:-5%}100%{top:105%}}
   body[data-mode="night"] .spine .spsig{position:absolute;right:9px;bottom:7px;z-index:3;display:flex;align-items:flex-end;gap:2px;pointer-events:none}
-  body[data-mode="night"] .spine .spsig i{display:block;width:3px;background:#1a2e3c;border-radius:1px}
+  body[data-mode="night"] .spine .spsig i{display:block;width:3px;background:#1a2e3c;border-radius:1px;box-shadow:inset 0 0 0 1px rgba(45,231,255,.12)}
   body[data-mode="night"] .spine .spsig i:nth-child(1){height:4px}
   body[data-mode="night"] .spine .spsig i:nth-child(2){height:6px}
   body[data-mode="night"] .spine .spsig i:nth-child(3){height:8px}
@@ -564,6 +583,13 @@
   body[data-mode="night"] .modal input[type=date],body[data-mode="night"] .modal textarea{
     background:#050a12;border:1px solid #163044;color:var(--ink,#eaffff)}
   body[data-mode="night"] .modal .cancel{background:transparent;border:1px solid #234158;color:var(--dim,#8fb0bd)}
+  body[data-mode="night"] .legend-ic{color:var(--gold-hi,#8ff5ff)}
+  body[data-mode="night"] .lg-ico{color:var(--gold-hi,#8ff5ff)}
+  body[data-mode="night"] .statcell{background:#0a1420;border-color:#163044}
+  body[data-mode="night"] .statcell b{color:#eaffff;text-shadow:0 0 8px rgba(45,231,255,.25)}
+  body[data-mode="night"] .statcell span{color:var(--dim,#8fb0bd)}
+  body[data-mode="night"] .toprow b{color:var(--gold,#17c9e0)}
+  body[data-mode="night"] .ybarline{background:rgba(45,231,255,.08)}
   .legend-list{display:flex;flex-direction:column;gap:14px;margin:6px 0 18px}
   .legend-row{display:flex;align-items:center;gap:14px}
   .legend-ic{flex:none;width:28px;text-align:center;font-size:16px;color:var(--brown-2)}
@@ -631,14 +657,15 @@
 </style>
 </head>
 <body>
+<div class="modeflash" id="modeflash" aria-hidden="true"></div>
 <div class="wrap">
   <header>
     <h1>The Reading Desk</h1>
-    <div class="stat"><b id="cRead">0</b> read &nbsp;·&nbsp; <b id="cReading">0</b> reading &nbsp;·&nbsp; <b id="cUnread">0</b> unread &nbsp;·&nbsp; <b id="cDnf">0</b> set aside &nbsp;·&nbsp; <b id="cTotal">0</b> total</div>
+    <div class="stat"><b id="cRead">0</b> read &nbsp;·&nbsp; <b id="cReading">0</b> reading &nbsp;·&nbsp; <b id="cUnread">0</b> unread &nbsp;·&nbsp; <b id="cDnf">0</b> set aside &nbsp;·&nbsp; <b id="cTotal">0</b> total<span id="cStreak"></span></div>
   </header>
 
   <div class="cabinet">
-    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v38</div>
+    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v40</div>
     <div class="hero" id="hero"></div>
 
     <input type="search" id="q" class="search" placeholder="Search title or author" aria-label="Search titles and authors">
@@ -868,14 +895,20 @@ const THEMES={
   rare:{name:'Rare Books',t:o=>o},
   paperback:{name:'Paperback',t:o=>({h:o.h,s:clamp(o.s*1.28+8,0,96),l:clamp(o.l+(o.l<50?12:6),8,92)})},
   mono:{name:'Monochrome',t:o=>({h:38,s:clamp(o.s*0.10,0,10),l:o.l})},
-  faded:{name:'Sun-faded',t:o=>({h:o.h,s:clamp(o.s*0.5,0,55),l:clamp(o.l+18,0,90)})}};
+  faded:{name:'Sun-faded',t:o=>({h:o.h,s:clamp(o.s*0.5,0,55),l:clamp(o.l+18,0,90)})},
+  synthwave:{name:'Synthwave',t:o=>({h:(o.h+140+360)%360,s:clamp(o.s*1.05,0,100),l:clamp(o.l+4,0,95)})}};
 let THEME=localStorage.getItem('rl.theme')||'rare'; if(!THEMES[THEME]) THEME='rare';
 /* day/night is the outer skin (wood library vs neon terminal); THEME still applies its
    colour transform on top of whichever palette the active mode draws from */
 let MODE=localStorage.getItem('rl.mode')||'day'; if(MODE!=='night') MODE='day';
 function isNight(){ return MODE==='night'; }
-function setMode(m){ MODE=(m==='night')?'night':'day'; try{localStorage.setItem('rl.mode',MODE);}catch(e){}
-  document.body.dataset.mode=MODE; buildList(); render(); refreshModeUI(); }
+function setMode(m){ const next=(m==='night')?'night':'day'; const changed=next!==MODE; MODE=next;
+  try{localStorage.setItem('rl.mode',MODE);}catch(e){}
+  document.body.dataset.mode=MODE; buildList(); render(); refreshModeUI();
+  if(changed){ const fl=document.getElementById('modeflash'); if(fl){
+    fl.className='modeflash '+(MODE==='night'?'boot-in':'boot-out');
+    const dur = MODE==='night' ? 600 : 400;
+    clearTimeout(fl._t); fl._t=setTimeout(()=>{ fl.className='modeflash'; }, dur); } } }
 
 function hashStr(s){ s=String(s||''); let h=2166136261>>>0;
   for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619)>>>0; } return h>>>0; }
@@ -911,9 +944,12 @@ function shadeFor(hex,seed){ const c=hexToHsl(hex); const h=hashStr(seed);
 
 /* per-book shade inside the series family */
 function bookShade(seed,title){ const base=seriesBase(seed), c=hexToHsl(base), h=hashStr(title), light=isLight(seed);
-  const dh=((h&15)-7)*0.9, ds=(((h>>>4)&15)-7)*0.7, dl=(((h>>>8)&7)-3);
   if(isNight()){
-    return hslToHex((c.h+dh+360)%360, clamp(c.s+ds, light?30:60, light?60:100), clamp(c.l+dl, light?28:45, light?48:72)); }
+    /* wider hue spread than day mode: neon colours need more degrees of separation
+       to actually look distinct at high saturation */
+    const dh=((h&31)-15)*1.3, ds=(((h>>>5)&15)-7)*1.1, dl=(((h>>>9)&15)-7)*1.1;
+    return hslToHex((c.h+dh+360)%360, clamp(c.s+ds, light?26:55, light?66:100), clamp(c.l+dl, light?24:40, light?54:76)); }
+  const dh=((h&15)-7)*0.9, ds=(((h>>>4)&15)-7)*0.7, dl=(((h>>>8)&7)-3);
   return hslToHex((c.h+dh+360)%360, clamp(c.s+ds, light?6:12, light?42:72), clamp(c.l+dl, light?70:16, light?92:42)); }
 
 /* main entry: returns the themed spine colour, honouring a manual override */
@@ -1480,6 +1516,9 @@ function render(){
     const base=btn.dataset.label || (btn.dataset.label=btn.textContent.replace(/\s*\(\d+\)$/,''));
     btn.textContent=base+' ('+n+')';
   });
+  /* reading streak, shown in the header */
+  renderStreak();
+
   document.getElementById('cRead').textContent=read;
   document.getElementById('cReading').textContent=reading;
   document.getElementById('cUnread').textContent=unread;
@@ -1527,6 +1566,26 @@ function removeReadEntry(id,i){ const d=det(id); if(!d.reads||!d.reads[i]) retur
 function markRead(id){ status[id]='read'; if(!det(id).finished) det(id).finished=today(); sSt(); sDet(); render();
   toast('Marked finished \u2713'); }
 
+/* reading streak: any calendar day with a page update, a start, or a finish counts as
+   "active" \u2014 computed entirely from data already stored, no new schema needed */
+function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function activeDates(){ const set=new Set();
+  Object.values(details).forEach(d=>{
+    if(d.pcurAt) set.add(ymd(new Date(d.pcurAt)));
+    if(d.started) set.add(d.started);
+    if(d.finished) set.add(d.finished);
+  });
+  return set; }
+function currentStreak(){
+  const dates=activeDates(); const today=new Date(); let d=new Date(today);
+  if(!dates.has(ymd(d))) d.setDate(d.getDate()-1);   /* today not yet logged \u2014 grace, check from yesterday */
+  let n=0; while(dates.has(ymd(d))){ n++; d.setDate(d.getDate()-1); }
+  return n; }
+function renderStreak(){
+  const el=document.getElementById('cStreak'); if(!el) return;
+  const n=currentStreak();
+  el.textContent = n>=2 ? ' \u00b7 \ud83d\udd25 '+n+'-day streak' : '';
+}
 function bookById(id){ for(const s of catalog.series){ for(const b of s.books){ if(idOf(s.series,b)===id) return {s,b}; } } return null; }
 /* re-run decorateSpine on just one book's row, so rating/page edits update the
    card's visuals (stars, signal bars, thickness, patina) without a full rebuild */
@@ -2112,6 +2171,18 @@ function refreshModeUI(){
   if(!dayBtn) return;
   dayBtn.setAttribute('aria-pressed', String(MODE==='day'));
   nightBtn.setAttribute('aria-pressed', String(MODE==='night'));
+  const names = isNight()
+    ? {rare:'Full Signal', paperback:'Overclocked', mono:'Mono Grid', faded:'Low Power'}
+    : {rare:'Rare Books', paperback:'Paperback', mono:'Monochrome', faded:'Sun-faded'};
+  document.querySelectorAll('#theme option').forEach(o=>{ if(names[o.value]) o.textContent=names[o.value]; });
+  const sel=document.getElementById('theme'); let swOpt=document.getElementById('themeSynthwave');
+  if(isNight()){
+    if(!swOpt){ swOpt=document.createElement('option'); swOpt.id='themeSynthwave'; swOpt.value='synthwave'; swOpt.textContent='Synthwave'; sel.appendChild(swOpt); }
+  } else {
+    if(THEME==='synthwave'){ THEME='rare'; try{localStorage.setItem('rl.theme',THEME);}catch(e){} buildList(); render(); }
+    if(swOpt) swOpt.remove();
+  }
+  if(sel) sel.value=THEME;
 }
 document.body.dataset.mode=MODE;
 document.getElementById('modeDay').onclick=()=>setMode('day');
