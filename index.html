@@ -208,6 +208,14 @@
     color:rgba(0,0,0,.34);text-shadow:0 1px 0 rgba(255,220,160,.10)}
   @media (max-width:640px){ .version{right:10px;bottom:6px;font-size:8px;letter-spacing:.12em} }
   .search{display:block;width:100%;margin:14px 0 0;flex:none}
+  .quickrow{display:flex;gap:10px;margin:10px 0 0}
+  .quickbtn{flex:1;font-family:var(--mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;
+    padding:12px 16px;border-radius:6px;cursor:pointer;background:var(--brown);border:1px solid var(--brown);color:var(--gold-hi)}
+  .quickbtn:hover{filter:brightness(1.12)}
+  .quickbtn[aria-pressed=true]{background:var(--gold-dim);border-color:var(--gold-dim);color:#20160c}
+  body[data-mode="night"] .quickbtn{background:linear-gradient(180deg,#0f2130,#081420);border-color:var(--gold,#17c9e0);color:var(--gold-hi,#8ff5ff)}
+  body[data-mode="night"] .quickbtn[aria-pressed=true]{background:linear-gradient(180deg,var(--gold-hi,#8ff5ff),var(--gold,#17c9e0));color:#02141a;border-color:var(--gold,#17c9e0)}
+  body[data-mode="night"] .quickbtn.pending{border-color:var(--ox);color:var(--ox)}
 
   /* controls drawer (collapsed by default) */
   .ctrl{margin:12px 0 0;border-radius:8px;overflow:hidden;border:1px solid #150e07;
@@ -489,6 +497,24 @@
   .rowbtn.disc{opacity:1;color:#e6cf8fcc}
   body[data-mode="night"] .rowbtn.disc{color:var(--gold-hi,#8ff5ff)}
   .rowbtn.del:hover{color:#f0b48f}
+  /* pastel: every spine is light, so every one of these needs dark ink instead of the
+     cream tones tuned for the wood theme's dark spines. Scoped via [data-theme] with
+     enough specificity to win regardless of the cascade order above. */
+  body[data-theme="pastel"] .num{color:#4a3a22cc}
+  body[data-theme="pastel"] .ttl{color:#3a2b3a}
+  body[data-theme="pastel"] .bk.read .ttl{color:#3a2b3acc}
+  body[data-theme="pastel"] .bk.dnf .ttl{color:#3a2b3a80;text-decoration-color:#3a2b3a55}
+  body[data-theme="pastel"] .meta{color:#4a3a22cc}
+  body[data-theme="pastel"] .rowbtn{color:#4a3a2299}
+  body[data-theme="pastel"] .rowbtn.disc{color:#4a3a22cc}
+  body[data-theme="pastel"] .rowbtn.del:hover{color:#8a3b2f}
+  body[data-theme="pastel"] .star{color:#00000022}
+  body[data-theme="pastel"] .star.on{color:#8a6a1a}
+  body[data-theme="pastel"] .upchip{color:#3a2b3a}
+  body[data-theme="pastel"] .book .frame .bt{color:#3a2b3a}
+  body[data-theme="pastel"] .book .frame .ba{color:#4a3a22cc}
+  body[data-theme="pastel"] .book .bseries{color:#4a3a2299}
+  body[data-theme="pastel"] .fmeta .k,body[data-theme="pastel"] .fmeta .auth{color:var(--ink-soft)}
   .rowbtn.disc:hover{color:#fff}
 
   /* detail card (paper) drops beneath the spine */
@@ -601,6 +627,24 @@
   .statcell span{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)}
   .statsec{margin-bottom:18px}
   .statsec label{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:8px}
+  .goalsec{text-align:center}
+  .goalsec label{text-align:center}
+  .goalring{position:relative;width:80px;height:80px;margin:8px auto}
+  .goalring svg{transform:rotate(-90deg)}
+  .goaltrack{fill:none;stroke:var(--card-edge);stroke-width:7}
+  .goalfill{fill:none;stroke:var(--gold);stroke-width:7;stroke-linecap:round;transition:stroke-dasharray .4s ease}
+  .goalnum{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .goalnum b{font-family:var(--disp);font-size:20px;color:var(--brown-2);line-height:1}
+  .goalnum span{font-family:var(--mono);font-size:8px;color:var(--dim);margin-top:2px}
+  .goalmeta{font-family:var(--mono);font-size:11px;color:var(--ink-soft);margin-top:6px}
+  .goaledit{margin-top:8px;font-family:var(--mono);font-size:10px;background:none;border:1px solid var(--card-edge);color:var(--ink-soft);padding:5px 10px;border-radius:3px;cursor:pointer}
+  .goaledit:hover{border-color:var(--brown);color:var(--brown)}
+  .goalsec .addrow{justify-content:center;margin-top:4px}
+  body[data-mode="night"] .goaltrack{stroke:#163044}
+  body[data-mode="night"] .goalfill{stroke:var(--gold-hi);filter:drop-shadow(0 0 4px var(--gold-hi))}
+  body[data-mode="night"] .goalnum b{color:#eaffff;text-shadow:0 0 6px rgba(45,231,255,.3)}
+  body[data-mode="night"] .goaledit{border-color:#234158;color:var(--dim)}
+  body[data-mode="night"] .goaledit:hover{border-color:var(--gold);color:var(--gold-hi)}
   .ybar{display:flex;align-items:center;gap:9px;margin-bottom:5px}
   .ybar .yl{font-family:var(--mono);font-size:11px;color:var(--ink-soft);width:38px;flex:none}
   .ybar .yn{font-family:var(--mono);font-size:11px;color:var(--ink-soft);width:26px;text-align:right;flex:none}
@@ -653,6 +697,11 @@
   @media (max-width:640px){
     .cabinet{padding:9px 9px 28px;border-radius:9px}
     .ctrl-body{padding:12px 10px}
+    .chips{display:grid;grid-template-columns:repeat(3,1fr);border-radius:4px}
+    .chips button{border-right:1px solid var(--edge-dark);border-bottom:1px solid var(--edge-dark);padding:8px 3px;
+      font-size:9.5px;text-align:center;white-space:normal;line-height:1.35;letter-spacing:.04em}
+    .chips button:nth-child(3),.chips button:last-child{border-right:0}
+    .chips button:nth-child(4),.chips button:nth-child(5){border-bottom:0}
   }
 </style>
 </head>
@@ -665,10 +714,57 @@
   </header>
 
   <div class="cabinet">
-    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v40</div>
+    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v43</div>
     <div class="hero" id="hero"></div>
 
     <input type="search" id="q" class="search" placeholder="Search title or author" aria-label="Search titles and authors">
+
+    <div class="quickrow">
+      <button id="btnAdd" class="quickbtn" aria-pressed="false">+ Add</button>
+      <button id="btnSync" class="quickbtn" aria-pressed="false">Sync</button>
+    </div>
+    <div class="addpanel" id="syncpanel"></div>
+    <div class="addpanel" id="addpanel">
+      <div class="addgroup">
+        <h3>New series</h3>
+        <div class="addrow">
+          <input id="nsName" placeholder="Series name" aria-label="New series name">
+          <input id="nsAuthor" placeholder="Author" aria-label="New series author">
+          <button class="go" id="nsGo">Add series</button>
+        </div>
+      </div>
+      <div class="addgroup">
+        <h3>New book</h3>
+        <div class="addrow">
+          <select id="nbSeries" aria-label="Series for new book"></select>
+          <input class="small" id="nbNum" placeholder="#" aria-label="Book number, optional">
+          <input id="nbTitle" placeholder="Title" aria-label="New book title">
+          <input id="nbAuthor" placeholder="Author (for standalones)" aria-label="New book author, optional">
+          <div class="fmttoggle" id="nbFmt" role="group" aria-label="Format">
+            <button type="button" data-fmt="book" aria-pressed="true">Book</button>
+            <button type="button" data-fmt="audio" aria-pressed="false">Audiobook</button>
+          </div>
+          <button class="go" id="nbGo">Add book</button>
+        </div>
+      </div>
+      <div class="addgroup wide">
+        <h3>Import a file</h3>
+        <span class="hint">Bring in a Goodreads or StoryGraph CSV export, or a .txt list from this app. Existing books are skipped.</span>
+        <div class="addrow">
+          <button class="go" id="btnImport">Choose file…</button>
+          <span class="hint" id="importHint">.csv or .txt</span>
+        </div>
+      </div>
+      <div class="addgroup wide">
+        <h3>Paste a list</h3>
+        <span class="hint">One book per line. Leading numbers like "3.5." are read as the book number.</span>
+        <div class="addrow">
+          <select id="npSeries" aria-label="Series to paste into"></select>
+          <textarea id="npText" placeholder="1. First Book&#10;2. Second Book&#10;2.5. A Novella&#10;3. Third Book" aria-label="Book list to paste"></textarea>
+          <button class="go" id="npGo">Add list</button>
+        </div>
+      </div>
+    </div>
 
     <section class="ctrl" id="ctrl">
       <button class="ctrl-head" id="ctrlHead" aria-expanded="false" aria-controls="ctrlBody">
@@ -737,55 +833,9 @@
 
         <span class="grouplbl">Account</span>
         <div class="tools">
-          <button id="btnAdd" aria-pressed="false">+ Add</button>
-          <button id="btnSync" aria-pressed="false">Sync</button>
           <button id="btnStats">Stats</button>
           <button id="btnSave">Save backup</button>
           <button id="btnLoad">Load backup</button>
-        </div>
-
-        <div class="addpanel" id="syncpanel"></div>
-
-        <div class="addpanel" id="addpanel">
-          <div class="addgroup">
-            <h3>New series</h3>
-            <div class="addrow">
-              <input id="nsName" placeholder="Series name" aria-label="New series name">
-              <input id="nsAuthor" placeholder="Author" aria-label="New series author">
-              <button class="go" id="nsGo">Add series</button>
-            </div>
-          </div>
-          <div class="addgroup">
-            <h3>New book</h3>
-            <div class="addrow">
-              <select id="nbSeries" aria-label="Series for new book"></select>
-              <input class="small" id="nbNum" placeholder="#" aria-label="Book number, optional">
-              <input id="nbTitle" placeholder="Title" aria-label="New book title">
-              <input id="nbAuthor" placeholder="Author (for standalones)" aria-label="New book author, optional">
-              <div class="fmttoggle" id="nbFmt" role="group" aria-label="Format">
-                <button type="button" data-fmt="book" aria-pressed="true">Book</button>
-                <button type="button" data-fmt="audio" aria-pressed="false">Audiobook</button>
-              </div>
-              <button class="go" id="nbGo">Add book</button>
-            </div>
-          </div>
-          <div class="addgroup wide">
-            <h3>Import a file</h3>
-            <span class="hint">Bring in a Goodreads or StoryGraph CSV export, or a .txt list from this app. Existing books are skipped.</span>
-            <div class="addrow">
-              <button class="go" id="btnImport">Choose file…</button>
-              <span class="hint" id="importHint">.csv or .txt</span>
-            </div>
-          </div>
-          <div class="addgroup wide">
-            <h3>Paste a list</h3>
-            <span class="hint">One book per line. Leading numbers like "3.5." are read as the book number.</span>
-            <div class="addrow">
-              <select id="npSeries" aria-label="Series to paste into"></select>
-              <textarea id="npText" placeholder="1. First Book&#10;2. Second Book&#10;2.5. A Novella&#10;3. Third Book" aria-label="Book list to paste"></textarea>
-              <button class="go" id="npGo">Add list</button>
-            </div>
-          </div>
         </div>
       </div>
     </section>
@@ -890,21 +940,43 @@ const NIGHT_FAMILIES=[
   {dark:'#c8ff2e',light:'#647d14'},{dark:'#6b5bff',light:'#362c85'},{dark:'#4fd8ff',light:'#256b85'},
   {dark:'#ff5b9c',light:'#85304f'},{dark:'#58ffcf',light:'#2c8567'},{dark:'#ffe14f',light:'#857517'}];
 const NIGHT_ACCENTS=['#2de7ff','#ff2bd6','#a742ff','#33ff9c','#ffb02e','#ff3b5c','#4fd8ff','#c8ff2e'];
+/* pastel: a dedicated day-mode family palette (not a themed() transform) so it can span
+   the wheel evenly instead of just brightening the existing muted wood hues. 15 hues,
+   ~24\u00b0 apart; "dark" = a slightly richer pastel, "light" = a very pale one \u2014 both stay
+   soft, so this always uses dark ink text regardless of the light/dark variant */
+const PASTEL_FAMILIES=[
+  {dark:'#eda3a3',light:'#fbe6e6'},{dark:'#eeb595',light:'#fcedde'},{dark:'#eec895',light:'#fcf2de'},
+  {dark:'#eadb95',light:'#faf6de'},{dark:'#d3e296',light:'#f2f8de'},{dark:'#b0e2a0',light:'#e6f8e2'},
+  {dark:'#96e2b8',light:'#def8ea'},{dark:'#96e2d3',light:'#def8f2'},{dark:'#96d9e2',light:'#def4f8'},
+  {dark:'#96b9e2',light:'#dee9f8'},{dark:'#a396e2',light:'#e4def8'},{dark:'#c096e2',light:'#eedef8'},
+  {dark:'#e096d6',light:'#f8def4'},{dark:'#e296b3',light:'#f8dee9'},{dark:'#e29fa0',light:'#f8e0e0'}];
 const NIGHT_ORN=['\u25C8','\u25C6','\u25B2','\u2B21','\u2726','\u25C7','\u25C9','\u2318'];
 const THEMES={
   rare:{name:'Rare Books',t:o=>o},
   paperback:{name:'Paperback',t:o=>({h:o.h,s:clamp(o.s*1.28+8,0,96),l:clamp(o.l+(o.l<50?12:6),8,92)})},
   mono:{name:'Monochrome',t:o=>({h:38,s:clamp(o.s*0.10,0,10),l:o.l})},
   faded:{name:'Sun-faded',t:o=>({h:o.h,s:clamp(o.s*0.5,0,55),l:clamp(o.l+18,0,90)})},
-  synthwave:{name:'Synthwave',t:o=>({h:(o.h+140+360)%360,s:clamp(o.s*1.05,0,100),l:clamp(o.l+4,0,95)})}};
-let THEME=localStorage.getItem('rl.theme')||'rare'; if(!THEMES[THEME]) THEME='rare';
-/* day/night is the outer skin (wood library vs neon terminal); THEME still applies its
-   colour transform on top of whichever palette the active mode draws from */
+  synthwave:{name:'Synthwave',t:o=>({h:(o.h+140+360)%360,s:clamp(o.s*1.05,0,100),l:clamp(o.l+4,0,95)})},
+  /* pastel's colour comes from its own family palette (see fam()/bookShade()) rather than
+     this transform \u2014 kept as a safe identity so themed() never chokes on a manual override
+     while pastel is active */
+  pastel:{name:'Pastel',t:o=>o}};
+/* day/night is the outer skin (wood library vs neon terminal); MODE must exist before
+   the theme variables below since each mode remembers its own theme choice independently */
 let MODE=localStorage.getItem('rl.mode')||'day'; if(MODE!=='night') MODE='day';
 function isNight(){ return MODE==='night'; }
+/* each mode keeps its own last-picked theme so switching modes never clobbers the other's
+   choice; night starts out mirroring day's current pick the very first time you visit it */
+let THEME_DAY=localStorage.getItem('rl.theme.day')||localStorage.getItem('rl.theme')||'rare';
+if(!THEMES[THEME_DAY] || THEME_DAY==='synthwave') THEME_DAY='rare';
+let THEME_NIGHT=localStorage.getItem('rl.theme.night');
+THEME_NIGHT = (THEME_NIGHT===null) ? (THEME_DAY==='pastel'?'rare':THEME_DAY) : THEME_NIGHT;
+if(!THEMES[THEME_NIGHT] || THEME_NIGHT==='pastel') THEME_NIGHT='rare';
+let THEME = isNight() ? THEME_NIGHT : THEME_DAY;
 function setMode(m){ const next=(m==='night')?'night':'day'; const changed=next!==MODE; MODE=next;
   try{localStorage.setItem('rl.mode',MODE);}catch(e){}
-  document.body.dataset.mode=MODE; buildList(); render(); refreshModeUI();
+  THEME = isNight() ? THEME_NIGHT : THEME_DAY;
+  document.body.dataset.mode=MODE; document.body.dataset.theme=THEME; buildList(); render(); refreshModeUI();
   if(changed){ const fl=document.getElementById('modeflash'); if(fl){
     fl.className='modeflash '+(MODE==='night'?'boot-in':'boot-out');
     const dur = MODE==='night' ? 600 : 400;
@@ -925,7 +997,9 @@ function themed(hex){ return hslToHex.apply(null,(function(o){o=THEMES[THEME].t(
 
 /* seed key: series name for series books, the book title for singles */
 function seedOf(seriesName,title,standalone){ return standalone ? title : seriesName; }
-function fam(seed){ const list=isNight()?NIGHT_FAMILIES:FAMILIES; return list[hashStr(seed)%list.length]; }
+function isPastel(){ return !isNight() && THEME==='pastel'; }
+function fam(seed){ if(isPastel()) return PASTEL_FAMILIES[hashStr(seed)%PASTEL_FAMILIES.length];
+  const list=isNight()?NIGHT_FAMILIES:FAMILIES; return list[hashStr(seed)%list.length]; }
 function isLight(seed){ return (hashStr(seed+'lite')%100)<26; }
 function seriesBase(seed){ return isLight(seed)?fam(seed).light:fam(seed).dark; }
 function hasBand(seed){ return (hashStr(seed+'band')%100)<64; }
@@ -933,7 +1007,7 @@ function bandIsFoil(seed){ return (hashStr(seed+'bandfoil')%2)===0; }
 function isFoilTitle(seed){ return (hashStr(seed+'foil')%100)<55; }
 function ornFor(seed){ const list=isNight()?NIGHT_ORN:ORN; return list[hashStr(seed+'orn')%list.length]; }
 function accentFor(author,seed){ const list=isNight()?NIGHT_ACCENTS:ACCENTS; return list[hashStr((author||seed)+'acc')%list.length]; }
-function textOn(seed){ if(isNight()) return '#eaffff'; return isLight(seed)?'#2a2018':'#f0e6cd'; }
+function textOn(seed){ if(isNight()) return '#eaffff'; if(isPastel()) return '#3a2b3a'; return isLight(seed)?'#2a2018':'#f0e6cd'; }
 function foilFor(seed){ return themed('#d8ad4d'); }
 
 /* legacy shade (kept for any old callers) */
@@ -949,6 +1023,10 @@ function bookShade(seed,title){ const base=seriesBase(seed), c=hexToHsl(base), h
        to actually look distinct at high saturation */
     const dh=((h&31)-15)*1.3, ds=(((h>>>5)&15)-7)*1.1, dl=(((h>>>9)&15)-7)*1.1;
     return hslToHex((c.h+dh+360)%360, clamp(c.s+ds, light?26:55, light?66:100), clamp(c.l+dl, light?24:40, light?54:76)); }
+  if(isPastel()){
+    /* both variants stay light \u2014 pastel means pastel, never crushed dark */
+    const dh=((h&31)-15)*0.8, ds=(((h>>>5)&15)-7)*0.7, dl=(((h>>>9)&15)-7)*0.7;
+    return hslToHex((c.h+dh+360)%360, clamp(c.s+ds, light?32:42, light?58:68), clamp(c.l+dl, light?80:62, light?92:78)); }
   const dh=((h&15)-7)*0.9, ds=(((h>>>4)&15)-7)*0.7, dl=(((h>>>8)&7)-3);
   return hslToHex((c.h+dh+360)%360, clamp(c.s+ds, light?6:12, light?42:72), clamp(c.l+dl, light?70:16, light?92:42)); }
 
@@ -997,7 +1075,7 @@ function buildHeroCard(sName,b){
   const book=document.createElement('div'); book.className='book';
   const _std=(sName==='Standalone'), _seed=seedOf(sName,b.title,_std), _auth=authorOf(sObj,b);
   const _col=spineColor(sName,b.title,_std,id);
-  const _light=det(id).color?(hexToHsl(det(id).color).l>58):isLight(_seed);
+  const _light=det(id).color?(hexToHsl(det(id).color).l>58):(isLight(_seed)||isPastel());
   const _foil=foilFor(_seed), _acc=themed(accentFor(_auth,_seed)), _text=_light?'#2a2018':'#f0e6cd';
   book.style.setProperty('--bookc',_col);
   book.classList.toggle('lightcover',_light);
@@ -1140,7 +1218,7 @@ function decorateSpine(spine, s, b, id, standalone){
   spine.style.setProperty('--spnumline', light?'rgba(0,0,0,.14)':'rgba(255,255,255,.14)');
   spine.style.setProperty('--spacc', acc);
   spine.style.setProperty('--sporn', foil);
-  spine.classList.toggle('light', light);
+  spine.classList.toggle('light', light || isPastel());
   /* (#8) foil vs blind title */
   const foilTitle=isFoilTitle(seed);
   spine.classList.toggle('foilttl', foilTitle);
@@ -1835,6 +1913,12 @@ function exportCSV(){
 }
 
 /* ---------------- READING STATS ---------------- */
+/* yearly reading goal: stored per-year so it naturally resets when the year turns over */
+function getGoal(){ try{ const g=JSON.parse(localStorage.getItem('rl.goal')||'null');
+  if(g && g.year===new Date().getFullYear() && g.target>0) return g; }catch(e){} return null; }
+function setGoalTarget(n){ n=Math.max(1,Math.round(+n||0)); if(!n) return;
+  try{ localStorage.setItem('rl.goal', JSON.stringify({year:new Date().getFullYear(), target:n})); }catch(e){} }
+function clearGoal(){ try{ localStorage.removeItem('rl.goal'); }catch(e){} }
 function computeStats(){
   const st={read:0,reading:0,unread:0,dnf:0,rated:0,ratingSum:0,pages:0,chapters:0,
     byYear:{},authors:{},finishes:[],rereads:0};
@@ -1907,6 +1991,37 @@ function openStats(){
   grid.append(cell(st.read,'finished'), cell(st.byYear[thisYear]||0,'in '+thisYear),
     cell(st.reading,'reading now'), cell(st.avg?st.avg.toFixed(1):'\u2014','avg rating'));
   m.appendChild(grid);
+
+  const goalWrap=document.createElement('div'); goalWrap.className='statsec goalsec';
+  const goal=getGoal(); const thisYearNum=st.byYear[thisYear]||0;
+  if(goal){
+    const pct=Math.min(100,Math.round(thisYearNum/goal.target*100));
+    const circ=2*Math.PI*34;
+    const dash=(circ*pct/100).toFixed(1);
+    const lbl=document.createElement('label'); lbl.textContent=thisYear+' reading goal'; goalWrap.appendChild(lbl);
+    const ring=document.createElement('div'); ring.className='goalring';
+    ring.innerHTML='<svg viewBox="0 0 80 80" width="80" height="80">'+
+        '<circle cx="40" cy="40" r="34" class="goaltrack"/>'+
+        '<circle cx="40" cy="40" r="34" class="goalfill" style="stroke-dasharray:'+dash+' '+circ.toFixed(1)+'"/>'+
+      '</svg><div class="goalnum"><b>'+thisYearNum+'</b><span>of '+goal.target+'</span></div>';
+    goalWrap.appendChild(ring);
+    const meta=document.createElement('div'); meta.className='goalmeta';
+    meta.textContent = thisYearNum>=goal.target ? pct+'% \u00b7 Goal reached! \ud83c\udf89' : pct+'% \u00b7 '+(goal.target-thisYearNum)+' to go';
+    goalWrap.appendChild(meta);
+    const edit=document.createElement('button'); edit.type='button'; edit.className='goaledit'; edit.textContent='Change goal';
+    edit.onclick=()=>{ clearGoal(); back.remove(); openStats(); };
+    goalWrap.appendChild(edit);
+  } else {
+    const lbl=document.createElement('label'); lbl.textContent='Set a '+thisYear+' reading goal'; goalWrap.appendChild(lbl);
+    const row=document.createElement('div'); row.className='addrow';
+    const inp=document.createElement('input'); inp.type='number'; inp.min='1'; inp.placeholder='books this year';
+    inp.setAttribute('aria-label','Reading goal for '+thisYear); inp.style.flex='1 1 140px';
+    const btn=document.createElement('button'); btn.className='go'; btn.textContent='Set goal';
+    btn.onclick=()=>{ setGoalTarget(inp.value); back.remove(); openStats(); };
+    inp.addEventListener('keydown',e=>{ if(e.key==='Enter') btn.click(); });
+    row.append(inp,btn); goalWrap.appendChild(row);
+  }
+  m.appendChild(goalWrap);
 
   const years=Object.keys(st.byYear).sort().reverse();
   if(years.length){
@@ -2165,7 +2280,10 @@ document.getElementById('rfilter').onchange=e=>{ ratingFilter=e.target.value; re
 document.getElementById('ffilter').onchange=e=>{ fmtFilter=e.target.value; render(); };
 document.getElementById('theme').value=THEME;
 document.getElementById('theme').onchange=e=>{ THEME=THEMES[e.target.value]?e.target.value:'rare';
-  try{localStorage.setItem('rl.theme',THEME);}catch(_){} buildList(); render(); };
+  if(isNight()){ THEME_NIGHT=THEME; try{localStorage.setItem('rl.theme.night',THEME);}catch(_){} }
+  else { THEME_DAY=THEME; try{localStorage.setItem('rl.theme.day',THEME);}catch(_){} }
+  document.body.dataset.theme=THEME;
+  buildList(); render(); };
 function refreshModeUI(){
   const dayBtn=document.getElementById('modeDay'), nightBtn=document.getElementById('modeNight');
   if(!dayBtn) return;
@@ -2175,16 +2293,16 @@ function refreshModeUI(){
     ? {rare:'Full Signal', paperback:'Overclocked', mono:'Mono Grid', faded:'Low Power'}
     : {rare:'Rare Books', paperback:'Paperback', mono:'Monochrome', faded:'Sun-faded'};
   document.querySelectorAll('#theme option').forEach(o=>{ if(names[o.value]) o.textContent=names[o.value]; });
-  const sel=document.getElementById('theme'); let swOpt=document.getElementById('themeSynthwave');
-  if(isNight()){
-    if(!swOpt){ swOpt=document.createElement('option'); swOpt.id='themeSynthwave'; swOpt.value='synthwave'; swOpt.textContent='Synthwave'; sel.appendChild(swOpt); }
-  } else {
-    if(THEME==='synthwave'){ THEME='rare'; try{localStorage.setItem('rl.theme',THEME);}catch(e){} buildList(); render(); }
-    if(swOpt) swOpt.remove();
-  }
+  const sel=document.getElementById('theme');
+  let swOpt=document.getElementById('themeSynthwave');
+  if(isNight()){ if(!swOpt){ swOpt=document.createElement('option'); swOpt.id='themeSynthwave'; swOpt.value='synthwave'; swOpt.textContent='Synthwave'; sel.appendChild(swOpt); } }
+  else if(swOpt) swOpt.remove();
+  let psOpt=document.getElementById('themePastel');
+  if(!isNight()){ if(!psOpt){ psOpt=document.createElement('option'); psOpt.id='themePastel'; psOpt.value='pastel'; psOpt.textContent='Pastel'; sel.appendChild(psOpt); } }
+  else if(psOpt) psOpt.remove();
   if(sel) sel.value=THEME;
 }
-document.body.dataset.mode=MODE;
+document.body.dataset.mode=MODE; document.body.dataset.theme=THEME;
 document.getElementById('modeDay').onclick=()=>setMode('day');
 document.getElementById('modeNight').onclick=()=>setMode('night');
 refreshModeUI();
