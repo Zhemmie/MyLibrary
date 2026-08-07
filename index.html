@@ -323,6 +323,13 @@
   .brass .sbtn:hover{color:#2e2409}
   .sprog{position:absolute;left:0;right:0;bottom:0;height:5px;background:#5a430e33;border-radius:0 0 4px 4px;overflow:hidden}
   .sprog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#4a3708,#20180a);box-shadow:inset 0 1px 0 rgba(255,255,255,.15);transition:width .4s ease}
+  /* the rename panel reuses .brass for its background/border but has entirely different
+     children (inputs, buttons) \u2014 opt it out of the read-only sign's grid layout so it
+     never inherits grid-template-areas meant for grip/caret/title/auth/tally/icons */
+  .brass.editing{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .brass.editing input{font-family:var(--mono);font-size:13px;padding:8px 10px;border:1px solid var(--card-edge);
+    border-radius:3px;background:var(--creme-hi);color:var(--ink);min-width:0}
+  body[data-mode="night"] .brass.editing input{background:#0a1420;border-color:#163044;color:var(--ink,#eaffff)}
   /* mobile: two rows, so a long title gets full width instead of squeezing the count/icons */
   @media (max-width:640px){
     .brass{
@@ -714,7 +721,7 @@
   </header>
 
   <div class="cabinet">
-    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v43</div>
+    <div class="version" aria-hidden="true">The Reading Desk &nbsp;&middot;&nbsp; v44</div>
     <div class="hero" id="hero"></div>
 
     <input type="search" id="q" class="search" placeholder="Search title or author" aria-label="Search titles and authors">
@@ -1308,7 +1315,7 @@ function buildSpine(s,b,idx,cards,secEntry,standalone){
 
 function buildSeriesSign(s,drawer){
   if(editingSeries===s.series){
-    const ed=document.createElement('div'); ed.className='brass'; ed.style.cursor='default'; ed.innerHTML='';
+    const ed=document.createElement('div'); ed.className='brass editing'; ed.style.cursor='default'; ed.innerHTML='';
     const nm=document.createElement('input'); nm.value=s.series; nm.setAttribute('aria-label','Series name'); nm.style.cssText='flex:1 1 160px;margin-left:6px';
     const au=document.createElement('input'); au.value=s.author; au.placeholder='Author'; au.setAttribute('aria-label','Series author'); au.style.cssText='flex:1 1 120px';
     const sv=document.createElement('button'); sv.className='dact'; sv.textContent='Save';
